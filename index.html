@@ -1,553 +1,698 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mapa Mundial 2026 - 48 Países</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Mundial 2026 - 48 Países</title>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
-    crossorigin="anonymous"
-  />
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+        }
 
-  <style>
-    /* ─── Reset & Base ───────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        .main-container {
+            display: flex;
+            height: 100vh;
+            gap: 0;
+            overflow: hidden;
+        }
 
-    :root {
-      --bosque-oscuro:  #0D3B2B;
-      --verde-profundo: #1B5E20;
-      --verde-claro:    #4CAF50;
-      --tierra:         #6D4C41;
-      --tierra-clara:   #D4A574;
-      --shadow:         0 2px 8px rgba(0, 0, 0, 0.15);
-    }
+        #mapContainer {
+            flex: 1;
+            position: relative;
+            background: #e4e4e4;
+        }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 13px;
-      color: #333;
-      overflow: hidden;
-    }
+        .controls-info {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 400;
+            font-size: 12px;
+        }
 
-    /* ─── Layout principal ───────────────────────────────────────── */
-    .main-container {
-      display: flex;
-      height: 100vh;
-      gap: 0;
-    }
+        .controls-info h4 {
+            color: #0D3B2B;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
 
-    /* ─── Contenedor del mapa ────────────────────────────────────── */
-    #mapContainer {
-      flex: 1;
-      position: relative;
-      background: #e4e4e4;
-    }
+        .controls-info p {
+            color: #666;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
 
-    #map {
-      width: 100%;
-      height: 100%;
-    }
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: white;
+            padding: 10px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            z-index: 400;
+            font-size: 12px;
+        }
 
-    /* ─── Controles flotantes sobre el mapa ─────────────────────── */
-    .controls-info {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      z-index: 1000;
-      background: white;
-      padding: 10px 14px;
-      border-radius: 6px;
-      box-shadow: var(--shadow);
-      pointer-events: none;
-      min-width: 130px;
-    }
+        .legend p {
+            margin: 4px 0;
+            color: #666;
+        }
 
-    .controls-info h4 {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--bosque-oscuro);
-      margin-bottom: 6px;
-    }
+        .side-panels {
+            display: flex;
+            width: 500px;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.1);
+        }
 
-    .controls-info p {
-      font-size: 11px;
-      color: #666;
-      line-height: 1.8;
-    }
+        .countries-list {
+            width: 200px;
+            display: flex;
+            flex-direction: column;
+            background: white;
+            border-right: 1px solid #e0e0e0;
+        }
 
-    /* ─── Leyenda flotante ───────────────────────────────────────── */
-    .legend {
-      position: absolute;
-      bottom: 20px;
-      left: 20px;
-      z-index: 1000;
-      background: white;
-      padding: 10px 14px;
-      border-radius: 6px;
-      box-shadow: var(--shadow);
-      min-width: 160px;
-    }
+        .list-header {
+            padding: 16px;
+            background: linear-gradient(135deg, #0D3B2B 0%, #1B5E20 100%);
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+        }
 
-    .legend-title {
-      font-size: 11px;
-      font-weight: 700;
-      color: var(--bosque-oscuro);
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+        }
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: #555;
-      margin-bottom: 3px;
-    }
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
 
-    .legend-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+        .tab-btn.active {
+            color: #0D3B2B;
+            background: white;
+            border-bottom-color: #0D3B2B;
+        }
 
-    /* ─── Panel lateral (lista + info) ──────────────────────────── */
-    .side-panels {
-      width: 500px;
-      display: flex;
-      box-shadow: -2px 0 12px rgba(0, 0, 0, 0.12);
-      z-index: 10;
-    }
+        .tab-btn:hover {
+            background: white;
+        }
 
-    /* ── Lista de países ─────────────────────────────────────────── */
-    #countriesList {
-      width: 200px;
-      background: white;
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid #e0e0e0;
-    }
+        .countries-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+            display: none;
+        }
 
-    .list-header {
-      padding: 16px;
-      background: linear-gradient(160deg, var(--bosque-oscuro), var(--verde-profundo));
-      color: white;
-      flex-shrink: 0;
-    }
+        .countries-scroll.active {
+            display: block;
+        }
 
-    .list-header h3 {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
+        .groups-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4px;
+            display: none;
+        }
 
-    .list-header span {
-      font-size: 10px;
-      opacity: 0.75;
-    }
+        .groups-scroll.active {
+            display: block;
+        }
 
-    /* ── Tabs ────────────────────────────────────────────────────── */
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid #e0e0e0;
-      flex-shrink: 0;
-    }
+        .country-item {
+            padding: 10px 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            border-left: 3px solid transparent;
+            transition: all 0.2s;
+        }
 
-    .tab-btn {
-      flex: 1;
-      padding: 10px;
-      cursor: pointer;
-      border: none;
-      background: #fafafa;
-      font-size: 12px;
-      color: #777;
-      transition: background 0.15s, color 0.15s;
-    }
+        .country-item:hover {
+            background: #f0f0f0;
+            border-left-color: #0D3B2B;
+        }
 
-    .tab-btn:hover { background: #f0f0f0; }
+        .country-item.active {
+            background: #e8f5e9;
+            border-left-color: #4CAF50;
+            font-weight: 600;
+        }
 
-    .tab-btn.active {
-      color: var(--bosque-oscuro);
-      background: white;
-      font-weight: 600;
-      border-bottom: 2px solid var(--verde-claro);
-    }
+        .country-item-emoji {
+            font-size: 14px;
+            min-width: 16px;
+        }
 
-    /* ── Scroll de países ────────────────────────────────────────── */
-    .countries-scroll {
-      flex: 1;
-      overflow-y: auto;
-      padding: 4px;
-      display: none;
-    }
+        .country-item-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+        }
 
-    .countries-scroll.active { display: block; }
+        .country-item-code {
+            font-size: 9px;
+            color: #999;
+            background: #e0e0e0;
+            padding: 1px 3px;
+            border-radius: 2px;
+        }
 
-    /* ── Scroll de grupos ────────────────────────────────────────── */
-    .groups-scroll {
-      flex: 1;
-      overflow-y: auto;
-      padding: 4px;
-      display: none;
-    }
+        .group {
+            margin-bottom: 6px;
+            background: #fafafa;
+            border-radius: 4px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
 
-    .groups-scroll.active { display: block; }
+        .group-name {
+            padding: 8px 10px;
+            background: #0D3B2B;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            font-weight: 600;
+            user-select: none;
+        }
 
-    /* ── Ítem de país ────────────────────────────────────────────── */
-    .country-item {
-      padding: 10px 8px;
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-      border-left: 3px solid transparent;
-      border-radius: 0 4px 4px 0;
-      transition: background 0.12s, border-left-color 0.12s;
-    }
+        .group-toggle {
+            display: inline-block;
+            transition: transform 0.2s;
+        }
 
-    .country-item:hover {
-      background: #f0f0f0;
-      border-left-color: var(--bosque-oscuro);
-    }
+        .group-toggle.collapsed {
+            transform: rotate(-90deg);
+        }
 
-    .country-item.active {
-      background: #e8f5e9;
-      border-left-color: var(--verde-claro);
-      font-weight: 600;
-    }
+        .group-items {
+            padding: 0;
+            max-height: 500px;
+            transition: max-height 0.3s;
+            overflow: hidden;
+        }
 
-    .country-item-emoji { font-size: 14px; min-width: 16px; }
+        .group-items.collapsed {
+            max-height: 0;
+            padding: 0;
+        }
 
-    .country-item-name {
-      flex: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 12px;
-    }
+        #infoPanel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
-    .country-item-code {
-      font-size: 9px;
-      color: #999;
-      background: #e0e0e0;
-      padding: 1px 3px;
-      border-radius: 2px;
-      flex-shrink: 0;
-    }
+        .panel-header {
+            padding: 16px;
+            border-bottom: 1px solid #e0e0e0;
+            background: #fafafa;
+            position: sticky;
+            top: 0;
+        }
 
-    /* ── Grupos ──────────────────────────────────────────────────── */
-    .group {
-      margin-bottom: 6px;
-      background: #fafafa;
-      border-radius: 4px;
-      border: 1px solid #e8e8e8;
-      overflow: hidden;
-    }
+        .panel-header h2 {
+            font-size: 14px;
+            color: #0D3B2B;
+            margin-bottom: 4px;
+        }
 
-    .group-name {
-      padding: 8px 10px;
-      background: var(--bosque-oscuro);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-    }
+        .panel-header p {
+            font-size: 12px;
+            color: #999;
+        }
 
-    .group-name:hover { background: var(--verde-profundo); }
+        .panel-content {
+            flex: 1;
+            padding: 12px;
+            overflow-y: auto;
+        }
 
-    .group-toggle {
-      display: inline-block;
-      transition: transform 0.2s;
-      font-style: normal;
-    }
+        .placeholder {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+            font-size: 12px;
+        }
 
-    .group-toggle.collapsed { transform: rotate(-90deg); }
+        .country-card {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            overflow: hidden;
+        }
 
-    .group-items {
-      padding: 0;
-      max-height: 500px;
-      overflow: hidden;
-      transition: max-height 0.3s ease;
-    }
+        .card-header {
+            background: linear-gradient(135deg, #0D3B2B 0%, #1B5E20 100%);
+            color: white;
+            padding: 12px;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
 
-    .group-items.collapsed { max-height: 0; }
+        .card-flag {
+            font-size: 32px;
+        }
 
-    /* ── Panel de información ────────────────────────────────────── */
-    #infoPanel {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
+        .card-title {
+            flex: 1;
+        }
 
-    .panel-header {
-      padding: 16px;
-      border-bottom: 1px solid #e8e8e8;
-      background: #fafafa;
-      position: sticky;
-      top: 0;
-      flex-shrink: 0;
-    }
+        .card-title h3 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
 
-    .panel-header h2 {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--bosque-oscuro);
-      margin-bottom: 2px;
-    }
+        .card-title p {
+            font-size: 11px;
+            opacity: 0.9;
+        }
 
-    .panel-header p {
-      font-size: 11px;
-      color: #888;
-    }
+        .card-body {
+            padding: 12px;
+        }
 
-    .panel-content {
-      flex: 1;
-      padding: 12px;
-      overflow-y: auto;
-    }
+        .info-row {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+        }
 
-    .placeholder {
-      text-align: center;
-      padding: 40px 20px;
-      color: #bbb;
-    }
+        .info-label {
+            color: #888;
+            font-weight: 600;
+        }
 
-    .placeholder p { font-size: 13px; margin-top: 8px; }
+        .info-value {
+            color: #1a1a1a;
+            text-align: right;
+            flex: 1;
+            margin-left: 6px;
+        }
 
-    /* ── Tarjeta de información del país ─────────────────────────── */
-    .info-card { display: flex; flex-direction: column; gap: 12px; }
+        .info-section {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #e0e0e0;
+        }
 
-    .info-flag {
-      font-size: 48px;
-      text-align: center;
-      padding: 16px 0 8px;
-    }
+        .info-section h4 {
+            color: #0D3B2B;
+            font-size: 11px;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
 
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 12px;
-    }
+        .ficha-message {
+            background: #e8f5e9;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 3px solid #4CAF50;
+            font-size: 11px;
+            color: #2e7d32;
+            margin-top: 10px;
+        }
 
-    .info-row:last-child { border-bottom: none; }
+        /* Animaciones para marcadores */
+        @keyframes pulse-glow {
+            0%, 100% { 
+                filter: drop-shadow(0 0 4px #4CAF50) drop-shadow(0 0 8px #4CAF50); 
+                opacity: 1; 
+            }
+            50% { 
+                filter: drop-shadow(0 0 8px #4CAF50) drop-shadow(0 0 12px #4CAF50); 
+                opacity: 0.8; 
+            }
+        }
 
-    .info-label { color: #888; }
-    .info-value { font-weight: 600; color: #333; }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
 
-    .info-badge {
-      display: inline-block;
-      padding: 3px 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 700;
-      background: var(--verde-claro);
-      color: white;
-    }
+        .marker-pulse { 
+            animation: pulse-glow 1.5s ease-in-out infinite; 
+        }
 
-    .info-coords {
-      font-family: monospace;
-      font-size: 11px;
-      color: #666;
-      background: #f5f5f5;
-      padding: 6px 8px;
-      border-radius: 4px;
-    }
+        .marker-blink { 
+            animation: blink 0.8s ease-in-out infinite; 
+        }
 
-    /* ─── Animaciones de marcadores ──────────────────────────────── */
-    @keyframes pulse-glow {
-      0%,  100% {
-        filter: drop-shadow(0 0 4px var(--verde-claro))
-                drop-shadow(0 0 8px var(--verde-claro));
-        opacity: 1;
-      }
-      50% {
-        filter: drop-shadow(0 0 8px var(--verde-claro))
-                drop-shadow(0 0 12px var(--verde-claro));
-        opacity: 0.8;
-      }
-    }
+        /* Scrollbar styling */
+        .countries-scroll::-webkit-scrollbar,
+        .groups-scroll::-webkit-scrollbar,
+        .panel-content::-webkit-scrollbar {
+            width: 6px;
+        }
 
-    @keyframes blink {
-      0%,  100% { opacity: 1; }
-      50%        { opacity: 0.5; }
-    }
+        .countries-scroll::-webkit-scrollbar-track,
+        .groups-scroll::-webkit-scrollbar-track,
+        .panel-content::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
 
-    .marker-pulse { animation: pulse-glow 1.5s ease-in-out infinite; }
-    .marker-blink { animation: blink 0.8s ease-in-out infinite; }
+        .countries-scroll::-webkit-scrollbar-thumb,
+        .groups-scroll::-webkit-scrollbar-thumb,
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
 
-    /* ─── Scrollbar personalizada ────────────────────────────────── */
-    ::-webkit-scrollbar { width: 5px; }
-    ::-webkit-scrollbar-track { background: #f5f5f5; }
-    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #aaa; }
-  </style>
+        .countries-scroll::-webkit-scrollbar-thumb:hover,
+        .groups-scroll::-webkit-scrollbar-thumb:hover,
+        .panel-content::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .side-panels {
+                width: 100%;
+                position: absolute;
+                bottom: 0;
+                max-height: 50vh;
+                border-top: 1px solid #e0e0e0;
+            }
+
+            .main-container {
+                flex-direction: column;
+            }
+
+            #mapContainer {
+                flex: 1;
+            }
+        }
+    </style>
 </head>
-
 <body>
-
-  <!-- ═══════════════════════════════════════════════════════════════
-       CONTENEDOR PRINCIPAL
-  ════════════════════════════════════════════════════════════════ -->
-  <div class="main-container">
-
-    <!-- ── Mapa ────────────────────────────────────────────────── -->
-    <div id="mapContainer">
-
-      <!-- Lienzo del mapa Leaflet -->
-      <div id="map"></div>
-
-      <!-- Controles de navegación flotantes -->
-      <div class="controls-info" aria-label="Instrucciones de navegación">
-        <h4>🗺️ Navega</h4>
-        <p>
-          🖱️ Arrastra el mapa<br>
-          🔍 Zoom con rueda<br>
-          👆 Click en país
-        </p>
-      </div>
-
-      <!-- Leyenda del mapa -->
-      <div class="legend" aria-label="Leyenda del mapa">
-        <div class="legend-title">Leyenda</div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background: var(--verde-claro);"></span>
-          <span>📍 48 Países</span>
-        </div>
-        <div class="legend-item">
-          <span class="legend-dot" style="background: #f0a500;"></span>
-          <span>Pendiente</span>
-        </div>
-      </div>
-
-    </div><!-- /mapContainer -->
-
-    <!-- ── Paneles laterales ──────────────────────────────────── -->
-    <div class="side-panels">
-
-      <!-- Lista de países / grupos -->
-      <div id="countriesList" aria-label="Lista de países participantes">
-
-        <div class="list-header">
-          <h3>⚽ MUNDIAL 2026</h3>
-          <span>48 países participantes</span>
+    <div class="main-container">
+        <div id="mapContainer">
+            <div class="controls-info">
+                <h4>🗺️ Navega</h4>
+                <p>🖱️ Arrastra para mover</p>
+                <p>🔍 Scroll para zoom</p>
+                <p>👆 Click en país</p>
+            </div>
+            <div class="legend">
+                <p><strong>📍 48 Países</strong></p>
+                <p>🟢 País disponible</p>
+                <p>🟡 Ficha en revisión</p>
+            </div>
         </div>
 
-        <!-- Tabs de navegación -->
-        <div class="tabs" role="tablist">
-          <button
-            class="tab-btn active"
-            role="tab"
-            aria-selected="true"
-            aria-controls="paises-tab"
-            onclick="switchTab('paises')"
-          >País</button>
-          <button
-            class="tab-btn"
-            role="tab"
-            aria-selected="false"
-            aria-controls="grupos-tab"
-            onclick="switchTab('grupos')"
-          >Grupos</button>
+        <div class="side-panels">
+            <div class="countries-list">
+                <div class="list-header">⚽ MUNDIAL 2026</div>
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('paises')">País</button>
+                    <button class="tab-btn" onclick="switchTab('grupos')">Grupos</button>
+                </div>
+                <div class="countries-scroll active" id="paises-tab">
+                    <div id="countriesScroll"></div>
+                </div>
+                <div class="groups-scroll" id="grupos-tab">
+                    <div id="groupsScroll"></div>
+                </div>
+            </div>
+
+            <div id="infoPanel">
+                <div class="panel-header">
+                    <h2>⚽ País</h2>
+                    <p>Selecciona para ver detalles</p>
+                </div>
+                <div class="panel-content">
+                    <div class="placeholder">👈 Elige un país</div>
+                </div>
+            </div>
         </div>
+    </div>
 
-        <!-- Tab: lista alfabética de países -->
-        <div class="countries-scroll active" id="paises-tab" role="tabpanel">
-          <div id="countriesScroll">
-            <!-- Generado por mapa.js -->
-          </div>
-        </div>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        <!-- Tab: países agrupados por grupo -->
-        <div class="groups-scroll" id="grupos-tab" role="tabpanel">
-          <div id="groupsScroll">
-            <!-- Generado por mapa.js -->
-          </div>
-        </div>
+    <!-- Firebase SDK v9+ (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
-      </div><!-- /countriesList -->
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDVLLTC-kqLBJ0Me06rqsu5BRneQiFkoE4",
+            authDomain: "mundial-2026-12e6c.firebaseapp.com",
+            databaseURL: "https://mundial-2026-12e6c.firebaseio.com",
+            projectId: "mundial-2026-12e6c",
+            storageBucket: "mundial-2026-12e6c.firebasestorage.app",
+            messagingSenderId: "498565136746",
+            appId: "1:498565136746:web:3a73c5e92a5bdfc5726513"
+        };
 
-      <!-- Panel de información del país seleccionado -->
-      <div id="infoPanel" aria-label="Información del país seleccionado">
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
 
-        <div class="panel-header">
-          <h2>⚽ País</h2>
-          <p>Selecciona un país para ver sus detalles</p>
-        </div>
+        // Global variables
+        let map, markers = {}, paises = {}, currentCountry = null;
 
-        <div class="panel-content">
-          <div class="placeholder" id="placeholder">
-            <div style="font-size: 40px;">👈</div>
-            <p>Elige un país del mapa<br>o de la lista lateral</p>
-          </div>
-          <!-- La tarjeta de info se inyecta aquí por mapa.js -->
-        </div>
+        // Datos de grupos
+        const grupos = {
+            'A': { nombre: 'Grupo A', paises: ['MX', 'ZA', 'KR', 'CZ'] },
+            'B': { nombre: 'Grupo B', paises: ['CA', 'BA', 'QA', 'CH'] },
+            'C': { nombre: 'Grupo C', paises: ['BR', 'MA', 'HT', 'SC'] },
+            'D': { nombre: 'Grupo D', paises: ['US', 'PY', 'AU', 'TR'] },
+            'E': { nombre: 'Grupo E', paises: ['DE', 'CW', 'CI', 'EC'] },
+            'F': { nombre: 'Grupo F', paises: ['NL', 'JP', 'SE', 'TN'] },
+            'G': { nombre: 'Grupo G', paises: ['BE', 'EG', 'IR', 'NZ'] },
+            'H': { nombre: 'Grupo H', paises: ['ES', 'CV', 'SA', 'UY'] },
+            'I': { nombre: 'Grupo I', paises: ['FR', 'SN', 'IQ', 'NO'] },
+            'J': { nombre: 'Grupo J', paises: ['AR', 'DZ', 'AT', 'JO'] },
+            'K': { nombre: 'Grupo K', paises: ['PT', 'CD', 'UZ', 'CO'] },
+            'L': { nombre: 'Grupo L', paises: ['GB', 'HR', 'GH', 'PA'] }
+        };
 
-      </div><!-- /infoPanel -->
+        // Cargar países
+        async function loadPaises() {
+            try {
+                const response = await fetch('/data/paises.json');
+                const data = await response.json();
+                
+                // Convertir array a objeto por código
+                data.paises.forEach(pais => {
+                    paises[pais.codigo] = pais;
+                });
 
-    </div><!-- /side-panels -->
+                init();
+            } catch (error) {
+                console.error('Error cargando paises.json:', error);
+            }
+        }
 
-  </div><!-- /main-container -->
+        // Inicializar mapa
+        function init() {
+            // Crear mapa
+            map = L.map('mapContainer').setView([20, 0], 3);
 
-  <!-- ═══════════════════════════════════════════════════════════════
-       SCRIPTS
-       Orden importante: Leaflet → Firebase config → lógica del mapa
-  ════════════════════════════════════════════════════════════════ -->
+            // Tile layer
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
 
-  <!-- Leaflet JS -->
-  <script
-    src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
-    crossorigin="anonymous"
-  ></script>
+            // Crear marcadores
+            Object.entries(paises).forEach(([codigo, pais]) => {
+                const marker = L.circleMarker([pais.latitud, pais.longitud], {
+                    radius: 7,
+                    fillColor: '#2196F3',
+                    color: '#fff',
+                    weight: 2,
+                    opacity: 1,
+                    fillOpacity: 0.85
+                }).addTo(map);
 
-  <!-- Firebase (config → lógica del mapa) -->
-  <script type="module" src="js/config-firebase.js"></script>
-  <script type="module" src="js/mapa.js"></script>
+                marker.bindTooltip(`${pais.emoji} ${pais.nombre}`, { permanent: true, direction: 'top' });
+                marker.on('click', () => select(codigo));
 
-  <!-- Inicialización y utilidades de UI (no-module, acceso global) -->
-  <script>
-    /**
-     * switchTab — Alterna entre el tab "País" y "Grupos"
-     * @param {'paises'|'grupos'} tab
-     */
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
-        const tabs = ['paises', 'grupos'];
-        btn.classList.toggle('active', tabs[i] === tab);
-        btn.setAttribute('aria-selected', tabs[i] === tab);
-      });
+                markers[codigo] = marker;
+            });
 
-      document.getElementById('paises-tab').classList.toggle('active', tab === 'paises');
-      document.getElementById('grupos-tab').classList.toggle('active', tab === 'grupos');
-    }
+            renderPaises();
+            renderGrupos();
+        }
 
-    /**
-     * toggleGroup — Expande / colapsa un grupo en la vista de Grupos
-     * @param {string} groupId
-     */
-    function toggleGroup(groupId) {
-      const items  = document.getElementById('group-items-' + groupId);
-      const toggle = document.getElementById('toggle-' + groupId);
-      if (!items || !toggle) return;
-      items.classList.toggle('collapsed');
-      toggle.classList.toggle('collapsed');
-    }
+        // Renderizar lista de países
+        function renderPaises() {
+            const sorted = Object.entries(paises).sort((a, b) => 
+                a[1].nombre.localeCompare(b[1].nombre, 'es')
+            );
 
-    // Disparar init() cuando el DOM esté listo
-    window.addEventListener('DOMContentLoaded', () => {
-      if (typeof init === 'function') init();
-    });
-  </script>
+            const html = sorted.map(([codigo, pais]) => `
+                <div class="country-item" onclick="select('${codigo}')">
+                    <span class="country-item-emoji">${pais.emoji}</span>
+                    <span class="country-item-name">${pais.nombre}</span>
+                    <span class="country-item-code">${codigo}</span>
+                </div>
+            `).join('');
 
+            document.getElementById('countriesScroll').innerHTML = html;
+        }
+
+        // Renderizar grupos
+        function renderGrupos() {
+            let html = '';
+            
+            Object.entries(grupos).forEach(([key, grupo]) => {
+                const paisesGrupo = grupo.paises.map(codigo => {
+                    const pais = paises[codigo];
+                    return `
+                        <div class="country-item" onclick="select('${codigo}')">
+                            <span class="country-item-emoji">${pais.emoji}</span>
+                            <span class="country-item-name">${pais.nombre}</span>
+                            <span class="country-item-code">${codigo}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                html += `
+                    <div class="group">
+                        <div class="group-name" onclick="toggleGroup(this)">
+                            <span>${grupo.nombre}</span>
+                            <span class="group-toggle">▼</span>
+                        </div>
+                        <div class="group-items">
+                            ${paisesGrupo}
+                        </div>
+                    </div>
+                `;
+            });
+
+            document.getElementById('groupsScroll').innerHTML = html;
+        }
+
+        // Cambiar tab
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.countries-scroll, .groups-scroll').forEach(el => el.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(tab + '-tab').classList.add('active');
+        };
+
+        // Alternar grupo
+        window.toggleGroup = function(element) {
+            const items = element.nextElementSibling;
+            const toggle = element.querySelector('.group-toggle');
+
+            items.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+        };
+
+        // Seleccionar país
+        window.select = function(codigo) {
+            currentCountry = codigo;
+            const pais = paises[codigo];
+
+            // Actualizar marcadores
+            document.querySelectorAll('.country-item').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.country-item').forEach(el => {
+                if (el.textContent.includes(pais.nombre)) {
+                    el.classList.add('active');
+                }
+            });
+
+            // Animar marcador
+            Object.values(markers).forEach(marker => {
+                const path = marker._path;
+                if (path) {
+                    path.classList.remove('marker-pulse', 'marker-blink');
+                }
+                marker.setRadius(7);
+                marker.setStyle({ weight: 2, fillOpacity: 0.85 });
+            });
+
+            const selectedMarker = markers[codigo];
+            if (selectedMarker._path) {
+                selectedMarker._path.classList.add('marker-pulse', 'marker-blink');
+            }
+            selectedMarker.setRadius(14);
+            selectedMarker.setStyle({ weight: 3, fillOpacity: 1 });
+
+            // Zoom
+            map.setView([pais.latitud, pais.longitud], 6);
+
+            // Info panel
+            const html = `
+                <div class="country-card">
+                    <div class="card-header">
+                        <div class="card-flag">${pais.emoji}</div>
+                        <div class="card-title">
+                            <h3>${pais.nombre}</h3>
+                            <p>${pais.codigo}</p>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-row">
+                            <span class="info-label">Capital</span>
+                            <span class="info-value">${pais.capital}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Moneda</span>
+                            <span class="info-value">${pais.moneda}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Ubicación</span>
+                            <span class="info-value">${pais.ubicacion}</span>
+                        </div>
+                        <div class="ficha-message">
+                            📌 Ficha lista para llenar
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.querySelector('.panel-content').innerHTML = html;
+        };
+
+        // Cargar datos
+        loadPaises();
+    </script>
 </body>
 </html>
