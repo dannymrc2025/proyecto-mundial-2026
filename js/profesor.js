@@ -5,7 +5,7 @@
  */
 
 import { auth, db, signInAnonymously, esProfesor } from './config-firebase.js';
-import { ref, get, set, onValue } from 'firebase/database';
+import { ref, get, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 import { signOut }               from 'firebase/auth';
 
 // ─── Estado global ──────────────────────────────────────────────────────────

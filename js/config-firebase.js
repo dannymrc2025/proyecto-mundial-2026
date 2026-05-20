@@ -16,7 +16,7 @@ import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/1
 const firebaseConfig = {
   apiKey: "AIzaSyDVLLTC-kqLBJ0Me06rqsu5BRneQiFkoE4",
   authDomain: "mundial-2026-12e6c.firebaseapp.com",
-  databaseURL: "https://mundial-2026-12e6c.firebaseio.com",
+  databaseURL: "https://mundial-2026-12e6c-default-rtdb.firebaseio.com",
   projectId: "mundial-2026-12e6c",
   storageBucket: "mundial-2026-12e6c.firebasestorage.app",
   messagingSenderId: "498565136746",

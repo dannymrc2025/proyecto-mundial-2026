@@ -5,7 +5,7 @@
  */
 
 import { db } from './config-firebase.js';
-import { ref, get, onValue } from 'firebase/database';
+import { ref, get, onValue } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 
 // ─── Estado global ─────────────────────────────────────────────────────────
 let map;                   // Instancia del mapa Leaflet

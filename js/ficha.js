@@ -5,7 +5,7 @@
  */
 
 import { auth, db, signInAnonymously, crearUsuario } from './config-firebase.js';
-import { ref, set } from 'firebase/database';
+import { ref, set } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 
 // ─── Estado global ──────────────────────────────────────────────────────────
 let fichaData       = {};
