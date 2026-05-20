@@ -71,6 +71,31 @@ export async function saveData(path, data) {
 }
 
 // ================================================================================
+// VERIFICAR SI EL USUARIO ACTUAL ES PROFESOR
+// ================================================================================
+
+export async function esProfesor() {
+  const user = auth.currentUser;
+  if (!user) return false;
+  const snapshot = await get(ref(db, `profesores/${user.uid}`));
+  return snapshot.exists();
+}
+
+// ================================================================================
+// REGISTRAR USUARIO CON ROL EN LA BASE DE DATOS
+// ================================================================================
+
+export async function crearUsuario(role) {
+  const user = auth.currentUser;
+  if (!user) return;
+  const userRef = ref(db, `usuarios/${user.uid}`);
+  const snapshot = await get(userRef);
+  if (!snapshot.exists()) {
+    await set(userRef, { role, createdAt: Date.now() });
+  }
+}
+
+// ================================================================================
 // EXPORTAR REFERENCIAS PARA USO EN OTROS ARCHIVOS
 // ================================================================================
 
