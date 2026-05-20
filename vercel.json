@@ -1,9 +1,7 @@
 {
-  "buildCommand": "",
+  "framework": null,
+  "buildCommand": null,
   "outputDirectory": ".",
-  "public": false,
-  "env": {},
-  "functions": {},
   "routes": [
     {
       "src": "/data/(.*)",
