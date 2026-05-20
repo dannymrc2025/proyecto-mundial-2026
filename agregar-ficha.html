@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carga tu Ficha - Mundial 2026</title>
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      min-height: 100vh;
+    }
+
+    /* ─── Contenedor ───────────────────────────────────────────────── */
+    .container {
+      max-width: 900px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #0D3B2B 0%, #1B5E20 100%);
+      color: white;
+      padding: 30px;
+      border-radius: 8px;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    header h1 { font-size: 28px; margin-bottom: 10px; }
+    header p  { font-size: 14px; opacity: 0.9; }
+
+    /* ─── Formulario ───────────────────────────────────────────────── */
+    #fichaForm {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .seccion {
+      margin-bottom: 30px;
+      padding-bottom: 30px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    .seccion:last-of-type { border-bottom: none; }
+
+    h2 {
+      color: #0D3B2B;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    /* ─── Campos ───────────────────────────────────────────────────── */
+    label {
+      display: block;
+      margin-bottom: 12px;
+      font-weight: 600;
+      color: #333;
+      font-size: 14px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      margin-top: 5px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #0D3B2B;
+      box-shadow: 0 0 0 2px rgba(13, 59, 43, 0.1);
+    }
+
+    textarea { min-height: 80px; resize: vertical; }
+
+    /* ─── Tarjetas de científico / destino ─────────────────────────── */
+    .cientifico-item, .destino-item {
+      background: #f9f9f9;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 15px;
+      border-left: 4px solid #0D3B2B;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .item-header h4 { color: #0D3B2B; font-size: 14px; }
+
+    .item-header button {
+      background: #F44336;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      margin: 0;
+    }
+    .item-header button:hover { background: #d32f2f; }
+
+    .item-body label { margin-bottom: 12px; }
+
+    /* ─── Botones generales ────────────────────────────────────────── */
+    button[type="button"],
+    button[type="submit"] {
+      background: #1B5E20;
+      color: white;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      margin-right: 10px;
+      margin-top: 10px;
+      transition: background 0.15s;
+    }
+
+    button[type="button"]:hover,
+    button[type="submit"]:hover { background: #0D3B2B; }
+
+    button[type="submit"]:disabled {
+      background: #aaa;
+      cursor: not-allowed;
+    }
+
+    /* ─── Botones de acción al pie ─────────────────────────────────── */
+    .botones {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .btn-limpiar {
+      background: #6D4C41 !important;
+    }
+    .btn-limpiar:hover { background: #4e342e !important; }
+
+    /* ─── Preview JSON ─────────────────────────────────────────────── */
+    textarea#previewJSON {
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      background: #f5f5f5;
+      min-height: 160px;
+    }
+
+    /* ─── Contadores / validación ──────────────────────────────────── */
+    .contador {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .contador.ok    { color: #1B5E20; font-weight: 600; }
+    .contador.error { color: #c62828; font-weight: 600; }
+
+    .msg-validacion {
+      font-size: 13px;
+      color: #c62828;
+      margin-top: 8px;
+      display: none;
+    }
+    .msg-validacion.visible { display: block; }
+
+    /* ─── Responsive ───────────────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .container { padding: 15px; }
+      header h1  { font-size: 20px; }
+      .botones   { flex-direction: column; }
+      .botones button { width: 100%; margin-right: 0; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <!-- ══ ENCABEZADO ═══════════════════════════════════════════════ -->
+    <header>
+      <h1>⚽ Carga tu Ficha - Mundial 2026</h1>
+      <p>Investiga científicos y destinos turísticos de tu país participante</p>
+    </header>
+
+    <!-- ══ FORMULARIO ═══════════════════════════════════════════════ -->
+    <form id="fichaForm" novalidate>
+
+      <!-- ── Sección 1: País ────────────────────────────────────── -->
+      <section class="seccion">
+        <h2>🌍 Selecciona tu País</h2>
+        <label for="pais">
+          País participante *
+          <select id="pais" name="pais" required>
+            <option value="">-- Selecciona un país --</option>
+            <!-- Grupo A -->
+            <optgroup label="Grupo A">
+              <option value="MX">🇲🇽 México</option>
+              <option value="ZA">🇿🇦 Sudáfrica</option>
+              <option value="KR">🇰🇷 Corea del Sur</option>
+              <option value="CZ">🇨🇿 Chequia</option>
+            </optgroup>
+            <!-- Grupo B -->
+            <optgroup label="Grupo B">
+              <option value="CA">🇨🇦 Canadá</option>
+              <option value="BA">🇧🇦 Bosnia y Herzegovina</option>
+              <option value="QA">🇶🇦 Qatar</option>
+              <option value="CH">🇨🇭 Suiza</option>
+            </optgroup>
+            <!-- Grupo C -->
+            <optgroup label="Grupo C">
+              <option value="BR">🇧🇷 Brasil</option>
+              <option value="MA">🇲🇦 Marruecos</option>
+              <option value="HT">🇭🇹 Haití</option>
+              <option value="SC">🏴󠁧󠁢󠁳󠁣󠁴󠁿 Escocia</option>
+            </optgroup>
+            <!-- Grupo D -->
+            <optgroup label="Grupo D">
+              <option value="US">🇺🇸 Estados Unidos</option>
+              <option value="PY">🇵🇾 Paraguay</option>
+              <option value="AU">🇦🇺 Australia</option>
+              <option value="TR">🇹🇷 Turquía</option>
+            </optgroup>
+            <!-- Grupo E -->
+            <optgroup label="Grupo E">
+              <option value="DE">🇩🇪 Alemania</option>
+              <option value="CW">🇨🇼 Curazao</option>
+              <option value="CI">🇨🇮 Costa de Marfil</option>
+              <option value="EC">🇪🇨 Ecuador</option>
+            </optgroup>
+            <!-- Grupo F -->
+            <optgroup label="Grupo F">
+              <option value="NL">🇳🇱 Países Bajos</option>
+              <option value="JP">🇯🇵 Japón</option>
+              <option value="SE">🇸🇪 Suecia</option>
+              <option value="TN">🇹🇳 Túnez</option>
+            </optgroup>
+            <!-- Grupo G -->
+            <optgroup label="Grupo G">
+              <option value="BE">🇧🇪 Bélgica</option>
+              <option value="EG">🇪🇬 Egipto</option>
+              <option value="IR">🇮🇷 Irán</option>
+              <option value="NZ">🇳🇿 Nueva Zelanda</option>
+            </optgroup>
+            <!-- Grupo H -->
+            <optgroup label="Grupo H">
+              <option value="ES">🇪🇸 España</option>
+              <option value="CV">🇨🇻 Cabo Verde</option>
+              <option value="SA">🇸🇦 Arabia Saudita</option>
+              <option value="UY">🇺🇾 Uruguay</option>
+            </optgroup>
+            <!-- Grupo I -->
+            <optgroup label="Grupo I">
+              <option value="FR">🇫🇷 Francia</option>
+              <option value="SN">🇸🇳 Senegal</option>
+              <option value="IQ">🇮🇶 Irak</option>
+              <option value="NO">🇳🇴 Noruega</option>
+            </optgroup>
+            <!-- Grupo J -->
+            <optgroup label="Grupo J">
+              <option value="AR">🇦🇷 Argentina</option>
+              <option value="DZ">🇩🇿 Argelia</option>
+              <option value="AT">🇦🇹 Austria</option>
+              <option value="JO">🇯🇴 Jordania</option>
+            </optgroup>
+            <!-- Grupo K -->
+            <optgroup label="Grupo K">
+              <option value="PT">🇵🇹 Portugal</option>
+              <option value="CD">🇨🇩 RD Congo</option>
+              <option value="UZ">🇺🇿 Uzbekistán</option>
+              <option value="CO">🇨🇴 Colombia</option>
+            </optgroup>
+            <!-- Grupo L -->
+            <optgroup label="Grupo L">
+              <option value="GB">🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra</option>
+              <option value="HR">🇭🇷 Croacia</option>
+              <option value="GH">🇬🇭 Ghana</option>
+              <option value="PA">🇵🇦 Panamá</option>
+            </optgroup>
+          </select>
+        </label>
+      </section>
+
+      <!-- ── Sección 2: Científicos ──────────────────────────────── -->
+      <section class="seccion">
+        <h2>🔬 Científicos Notables <small style="font-size:13px;font-weight:400;">(Mínimo 2)</small></h2>
+        <div id="cientificosContainer"></div>
+        <p class="contador" id="contadorCientificos">0 / mínimo 2 científicos</p>
+        <button type="button" onclick="agregarCientifico()">+ Agregar Científico</button>
+      </section>
+
+      <!-- ── Sección 3: Destinos ─────────────────────────────────── -->
+      <section class="seccion">
+        <h2>🏖️ Destinos Turísticos <small style="font-size:13px;font-weight:400;">(Mínimo 2)</small></h2>
+        <div id="destinosContainer"></div>
+        <p class="contador" id="contadorDestinos">0 / mínimo 2 destinos</p>
+        <button type="button" onclick="agregarDestino()">+ Agregar Destino</button>
+      </section>
+
+      <!-- ── Sección 4: Vista previa JSON ───────────────────────── -->
+      <section class="seccion">
+        <h2>👁️ Vista Previa</h2>
+        <label for="previewJSON">
+          JSON que se enviará
+          <textarea id="previewJSON" readonly placeholder="Se llenará automáticamente al completar los campos..."></textarea>
+        </label>
+        <button type="button" onclick="copiarJSON()">📋 Copiar JSON</button>
+      </section>
+
+      <!-- ── Botones de acción ───────────────────────────────────── -->
+      <div class="seccion">
+        <p class="msg-validacion" id="msgValidacion">
+          ⚠️ Completa todos los campos obligatorios antes de enviar.
+        </p>
+        <div class="botones">
+          <button type="button" onclick="guardarBorrador()">💾 Guardar Borrador</button>
+          <button type="submit" id="btnEnviar" disabled>✅ Enviar para Revisión</button>
+          <button type="button" class="btn-limpiar" onclick="limpiarForm()">🗑️ Limpiar</button>
+        </div>
+      </div>
+
+    </form><!-- /fichaForm -->
+  </div><!-- /container -->
+
+  <!-- ══ SCRIPTS ══════════════════════════════════════════════════════ -->
+  <script type="module" src="js/config-firebase.js"></script>
+  <script type="module" src="js/ficha.js"></script>
+
+  <script>
+    /* ─── Templates ──────────────────────────────────────────────────
+       Estas funciones son llamadas desde los onclick inline y desde
+       ficha.js, por eso se exponen en window.
+    ─────────────────────────────────────────────────────────────────── */
+
+    let cientificoCount = 0;
+    let destinoCount    = 0;
+
+    /** Crea y añade una tarjeta de científico al contenedor */
+    function agregarCientifico() {
+      cientificoCount++;
+      const idx = cientificoCount;
+      const div = document.createElement('div');
+      div.className = 'cientifico-item';
+      div.id = `cientifico-${idx}`;
+      div.innerHTML = `
+        <div class="item-header">
+          <h4>Científico #${idx}</h4>
+          <button type="button" onclick="eliminarCientifico(${idx})" aria-label="Eliminar científico ${idx}">✕</button>
+        </div>
+        <div class="item-body">
+          <label>
+            Nombre *
+            <input type="text" name="cient_nombre_${idx}" placeholder="Ej: Mario Molina" required oninput="actualizarPreview()">
+          </label>
+          <label>
+            Disciplina *
+            <select name="cient_disciplina_${idx}" required onchange="actualizarPreview()">
+              <option value="">-- Selecciona --</option>
+              <option>Física</option>
+              <option>Química</option>
+              <option>Biología</option>
+              <option>Matemáticas</option>
+              <option>Astronomía</option>
+              <option>Medicina</option>
+              <option>Ingeniería</option>
+              <option>Otro</option>
+            </select>
+          </label>
+          <label>
+            Aporte / Descubrimiento *
+            <textarea name="cient_aporte_${idx}" placeholder="¿Qué descubrió o logró?" required oninput="actualizarPreview()"></textarea>
+          </label>
+          <label>
+            Años (Ej: 1943-2020) *
+            <input type="text" name="cient_anios_${idx}" placeholder="1943-2020"
+              pattern="\\d{4}(-\\d{4})?" required oninput="actualizarPreview()">
+          </label>
+        </div>
+      `;
+      document.getElementById('cientificosContainer').appendChild(div);
+      actualizarContadores();
+      actualizarPreview();
+    }
+
+    /** Crea y añade una tarjeta de destino al contenedor */
+    function agregarDestino() {
+      destinoCount++;
+      const idx = destinoCount;
+      const div = document.createElement('div');
+      div.className = 'destino-item';
+      div.id = `destino-${idx}`;
+      div.innerHTML = `
+        <div class="item-header">
+          <h4>Destino #${idx}</h4>
+          <button type="button" onclick="eliminarDestino(${idx})" aria-label="Eliminar destino ${idx}">✕</button>
+        </div>
+        <div class="item-body">
+          <label>
+            Nombre *
+            <input type="text" name="dest_nombre_${idx}" placeholder="Ej: Chichén Itzá" required oninput="actualizarPreview()">
+          </label>
+          <label>
+            Descripción *
+            <textarea name="dest_descripcion_${idx}" placeholder="¿Por qué visitarlo?" required oninput="actualizarPreview()"></textarea>
+          </label>
+          <label>
+            Enlace Oficial (URL) *
+            <input type="url" name="dest_url_${idx}" placeholder="https://..." required oninput="actualizarPreview()">
+          </label>
+        </div>
+      `;
+      document.getElementById('destinosContainer').appendChild(div);
+      actualizarContadores();
+      actualizarPreview();
+    }
+
+    /** Elimina una tarjeta de científico por su índice */
+    function eliminarCientifico(idx) {
+      const el = document.getElementById(`cientifico-${idx}`);
+      if (el) el.remove();
+      actualizarContadores();
+      actualizarPreview();
+    }
+
+    /** Elimina una tarjeta de destino por su índice */
+    function eliminarDestino(idx) {
+      const el = document.getElementById(`destino-${idx}`);
+      if (el) el.remove();
+      actualizarContadores();
+      actualizarPreview();
+    }
+
+    /** Actualiza los contadores y el estado del botón enviar */
+    function actualizarContadores() {
+      const nc = document.querySelectorAll('.cientifico-item').length;
+      const nd = document.querySelectorAll('.destino-item').length;
+
+      const cc = document.getElementById('contadorCientificos');
+      cc.textContent = `${nc} / mínimo 2 científicos`;
+      cc.className   = 'contador ' + (nc >= 2 ? 'ok' : 'error');
+
+      const cd = document.getElementById('contadorDestinos');
+      cd.textContent = `${nd} / mínimo 2 destinos`;
+      cd.className   = 'contador ' + (nd >= 2 ? 'ok' : 'error');
+
+      const pais   = document.getElementById('pais').value;
+      const habilitado = pais && nc >= 2 && nd >= 2;
+      document.getElementById('btnEnviar').disabled = !habilitado;
+
+      const msg = document.getElementById('msgValidacion');
+      msg.classList.toggle('visible', !habilitado);
+    }
+
+    /** Construye el objeto JSON y lo muestra en el textarea */
+    function actualizarPreview() {
+      actualizarContadores();
+      const pais = document.getElementById('pais').value;
+      if (!pais) {
+        document.getElementById('previewJSON').value = '';
+        return;
+      }
+
+      const cientificos = [];
+      document.querySelectorAll('.cientifico-item').forEach(item => {
+        const id = item.id.split('-')[1];
+        cientificos.push({
+          nombre:      (item.querySelector(`[name="cient_nombre_${id}"]`)?.value      || '').trim(),
+          disciplina:  (item.querySelector(`[name="cient_disciplina_${id}"]`)?.value  || '').trim(),
+          aporte:      (item.querySelector(`[name="cient_aporte_${id}"]`)?.value      || '').trim(),
+          anios:       (item.querySelector(`[name="cient_anios_${id}"]`)?.value       || '').trim(),
+        });
+      });
+
+      const destinos = [];
+      document.querySelectorAll('.destino-item').forEach(item => {
+        const id = item.id.split('-')[1];
+        destinos.push({
+          nombre:      (item.querySelector(`[name="dest_nombre_${id}"]`)?.value      || '').trim(),
+          descripcion: (item.querySelector(`[name="dest_descripcion_${id}"]`)?.value || '').trim(),
+          url:         (item.querySelector(`[name="dest_url_${id}"]`)?.value         || '').trim(),
+        });
+      });
+
+      const ficha = {
+        pais:        pais,
+        cientificos: cientificos,
+        destinos:    destinos,
+        estado:      'pendiente',
+        timestamp:   new Date().toISOString(),
+      };
+
+      document.getElementById('previewJSON').value = JSON.stringify(ficha, null, 2);
+    }
+
+    /** Copia el JSON generado al portapapeles */
+    function copiarJSON() {
+      const ta = document.getElementById('previewJSON');
+      if (!ta.value) { alert('Primero completa el formulario.'); return; }
+      navigator.clipboard.writeText(ta.value)
+        .then(() => alert('✅ JSON copiado al portapapeles.'))
+        .catch(() => {
+          ta.select();
+          document.execCommand('copy');
+          alert('✅ JSON copiado.');
+        });
+    }
+
+    /** Guarda el borrador en localStorage */
+    function guardarBorrador() {
+      const json = document.getElementById('previewJSON').value;
+      if (!json) { alert('No hay datos para guardar.'); return; }
+      localStorage.setItem('ficha_borrador', json);
+      alert('💾 Borrador guardado en este dispositivo.');
+    }
+
+    /** Limpia todo el formulario */
+    function limpiarForm() {
+      if (!confirm('¿Seguro que deseas limpiar todo el formulario?')) return;
+      document.getElementById('pais').value = '';
+      document.getElementById('cientificosContainer').innerHTML = '';
+      document.getElementById('destinosContainer').innerHTML  = '';
+      document.getElementById('previewJSON').value = '';
+      cientificoCount = 0;
+      destinoCount    = 0;
+      actualizarContadores();
+    }
+
+    /* ─── Listeners de formulario ───────────────────────────────── */
+    document.getElementById('pais').addEventListener('change', actualizarPreview);
+
+    document.getElementById('fichaForm').addEventListener('submit', e => {
+      e.preventDefault();
+      if (typeof enviarFicha === 'function') {
+        enviarFicha();
+      } else {
+        alert('⚠️ ficha.js no está cargado. La ficha no puede enviarse aún.');
+      }
+    });
+
+    /* ─── Exponer al scope global (usadas por ficha.js) ─────────── */
+    window.agregarCientifico  = agregarCientifico;
+    window.agregarDestino     = agregarDestino;
+    window.eliminarCientifico = eliminarCientifico;
+    window.eliminarDestino    = eliminarDestino;
+    window.actualizarPreview  = actualizarPreview;
+    window.copiarJSON         = copiarJSON;
+    window.guardarBorrador    = guardarBorrador;
+    window.limpiarForm        = limpiarForm;
+
+    /* ─── Inicialización ────────────────────────────────────────── */
+    window.addEventListener('DOMContentLoaded', () => {
+      // Agregar 2 científicos y 2 destinos por defecto
+      agregarCientifico();
+      agregarCientifico();
+      agregarDestino();
+      agregarDestino();
+
+      // Restaurar borrador si existe
+      const borrador = localStorage.getItem('ficha_borrador');
+      if (borrador) {
+        const restaurar = confirm('Se encontró un borrador guardado. ¿Deseas restaurarlo?');
+        if (restaurar) {
+          try {
+            const data = JSON.parse(borrador);
+            if (data.pais) document.getElementById('pais').value = data.pais;
+            actualizarPreview();
+          } catch {}
+        }
+      }
+
+      if (typeof init === 'function') init();
+    });
+  </script>
+  <script type="module">
+    /* Guarda de ruta: redirige al profesor si intenta cargar fichas */
+    import { esProfesor } from './js/config-firebase.js';
+    window.addEventListener('load', async () => {
+      if (await esProfesor()) {
+        alert('Solo alumnos pueden cargar fichas.');
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+
+</body>
+</html>

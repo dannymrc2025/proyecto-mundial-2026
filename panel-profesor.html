@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Panel Profesor - Validación de Fichas</title>
+
+  <style>
+    /* ─── Reset & Base ─────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      color: #333;
+      font-size: 14px;
+    }
+
+    /* ─── Header ───────────────────────────────────────────────────── */
+    .header {
+      background: linear-gradient(160deg, #0D3B2B, #1B5E20);
+      color: white;
+      padding: 30px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .header-left h1 {
+      font-size: 24px;
+      margin-bottom: 15px;
+    }
+
+    .header-info {
+      display: flex;
+      gap: 30px;
+      font-size: 14px;
+      flex-wrap: wrap;
+    }
+
+    .header-info p { opacity: 0.9; }
+    .header-info span { font-weight: 700; font-size: 18px; }
+
+    .btn-logout {
+      background: rgba(255, 255, 255, 0.15);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 10px 18px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: background 0.15s;
+      align-self: flex-start;
+    }
+    .btn-logout:hover { background: rgba(255, 255, 255, 0.25); }
+
+    /* ─── Tabs de navegación ───────────────────────────────────────── */
+    .tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid #e0e0e0;
+      padding: 0 20px;
+      background: white;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .tab-btn {
+      padding: 15px 30px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      color: #666;
+      border-bottom: 3px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      margin-bottom: -2px;
+    }
+    .tab-btn:hover { color: #333; }
+    .tab-btn.active { color: #0D3B2B; border-bottom-color: #0D3B2B; }
+
+    /* ─── Contenido de tabs ────────────────────────────────────────── */
+    .tab-content {
+      padding: 20px;
+      display: none;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .tab-content.active { display: block; }
+
+    .tab-empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: #aaa;
+      font-size: 16px;
+    }
+
+    /* ─── Tarjeta de ficha ─────────────────────────────────────────── */
+    .ficha-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+      transition: box-shadow 0.15s;
+    }
+    .ficha-card:hover { box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pais  { font-weight: 700; font-size: 16px; }
+    .fecha { font-size: 12px; color: #888; }
+
+    .estado {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+    }
+    .estado.pending  { background: #FFC107; color: #333; }
+    .estado.approved { background: #4CAF50; color: white; }
+    .estado.rejected { background: #F44336; color: white; }
+
+    .card-body { margin-bottom: 12px; line-height: 1.8; }
+    .card-body p { font-size: 13px; color: #555; }
+
+    .card-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    /* ─── Botones generales ────────────────────────────────────────── */
+    button {
+      padding: 8px 15px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13px;
+      transition: opacity 0.15s, background 0.15s;
+    }
+    button:hover { opacity: 0.88; }
+
+    .btn-ver      { background: #1976D2; color: white; }
+    .btn-aprobar  { background: #4CAF50; color: white; }
+    .btn-rechazar { background: #F44336; color: white; }
+
+    /* ─── Modal base ───────────────────────────────────────────────── */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal.hidden { display: none; }
+
+    .modal-content {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 640px;
+      max-height: 82vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+      padding: 4px 8px;
+    }
+    .close-btn:hover { color: #000; opacity: 1; }
+
+    /* ─── Contenido del modal de ficha ─────────────────────────────── */
+    #modalTitle {
+      font-size: 20px;
+      color: #0D3B2B;
+      margin-bottom: 20px;
+      padding-right: 30px;
+    }
+
+    .modal-section { margin-bottom: 20px; }
+
+    .modal-section h3 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #0D3B2B;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 10px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .modal-item {
+      background: #f9f9f9;
+      border-left: 3px solid #0D3B2B;
+      padding: 10px 12px;
+      border-radius: 0 4px 4px 0;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .modal-item strong { color: #0D3B2B; }
+    .modal-item a { color: #1976D2; word-break: break-all; }
+
+    /* ─── Validaciones en modal ─────────────────────────────────────── */
+    #validaciones { list-style: none; }
+    #validaciones li {
+      font-size: 13px;
+      padding: 5px 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    .val-ok   { color: #2e7d32; }
+    .val-warn { color: #e65100; }
+    .val-err  { color: #c62828; }
+
+    /* ─── Acciones del modal ────────────────────────────────────────── */
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #e0e0e0;
+      flex-wrap: wrap;
+    }
+
+    /* ─── Modal rechazo ─────────────────────────────────────────────── */
+    .rechazo-content { max-width: 440px; }
+
+    .rechazo-content h2 {
+      font-size: 18px;
+      color: #c62828;
+      margin-bottom: 16px;
+    }
+
+    #motivoRechazo {
+      width: 100%;
+      min-height: 120px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      margin-bottom: 14px;
+    }
+    #motivoRechazo:focus {
+      outline: none;
+      border-color: #c62828;
+      box-shadow: 0 0 0 2px rgba(198, 40, 40, 0.1);
+    }
+
+    /* ─── Toast ─────────────────────────────────────────────────────── */
+    #profesor-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      z-index: 9999;
+      transition: opacity 0.3s;
+      pointer-events: none;
+    }
+
+    /* ─── Responsive ────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .header { padding: 20px; }
+      .header-left h1 { font-size: 18px; }
+      .header-info { gap: 15px; }
+      .tab-btn { padding: 12px 16px; font-size: 12px; }
+      .modal-content { padding: 20px; margin: 10px; max-height: 90vh; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       HEADER
+  ════════════════════════════════════════════════════════════════════ -->
+  <header class="header">
+    <div class="header-left">
+      <h1>📋 Panel Profesor — Validación de Fichas</h1>
+      <div class="header-info">
+        <p>Pendientes: <span id="countPendientes">0</span></p>
+        <p>Aprobadas: <span id="countAprobadas">0</span></p>
+        <p>Rechazadas: <span id="countRechazadas">0</span></p>
+      </div>
+    </div>
+    <button class="btn-logout" onclick="logout()">🚪 Cerrar Sesión</button>
+  </header>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       NAVEGACIÓN DE TABS
+  ════════════════════════════════════════════════════════════════════ -->
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" role="tab" aria-controls="pendientes-tab"
+            onclick="mostrarTab('pendientes')">📋 Pendientes</button>
+    <button class="tab-btn"        role="tab" aria-controls="aprobadas-tab"
+            onclick="mostrarTab('aprobadas')">✅ Aprobadas</button>
+    <button class="tab-btn"        role="tab" aria-controls="rechazadas-tab"
+            onclick="mostrarTab('rechazadas')">❌ Rechazadas</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       CONTENIDO DE TABS
+  ════════════════════════════════════════════════════════════════════ -->
+
+  <div id="pendientes-tab"  class="tab-content active" role="tabpanel">
+    <div id="pendientesList">
+      <div class="tab-empty">Cargando fichas…</div>
+    </div>
+  </div>
+
+  <div id="aprobadas-tab"   class="tab-content" role="tabpanel">
+    <div id="aprobadasList">
+      <div class="tab-empty">No hay fichas aprobadas todavía.</div>
+    </div>
+  </div>
+
+  <div id="rechazadas-tab"  class="tab-content" role="tabpanel">
+    <div id="rechazadasList">
+      <div class="tab-empty">No hay fichas rechazadas.</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MODAL — VER FICHA
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="fichaModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-content">
+      <button class="close-btn" onclick="cerrarModal()" aria-label="Cerrar">✕</button>
+      <h2 id="modalTitle">Ficha</h2>
+
+      <!-- Científicos -->
+      <div class="modal-section">
+        <h3>🔬 Científicos</h3>
+        <div id="listaCientificos"><!-- rellenado por profesor.js --></div>
+      </div>
+
+      <!-- Destinos -->
+      <div class="modal-section">
+        <h3>🏖️ Destinos Turísticos</h3>
+        <div id="listaDestinos"><!-- rellenado por profesor.js --></div>
+      </div>
+
+      <!-- Validaciones automáticas -->
+      <div class="modal-section">
+        <h3>🛡️ Validaciones</h3>
+        <ul id="validaciones"><!-- rellenado por profesor.js --></ul>
+      </div>
+
+      <!-- Acciones -->
+      <div class="modal-actions">
+        <button id="btnAprobar"  class="btn-aprobar"  onclick="aprobarFichaActual()">✅ Aprobar</button>
+        <button id="btnRechazar" class="btn-rechazar" onclick="abrirRechazo()">❌ Rechazar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       MODAL — MOTIVO DE RECHAZO
+  ════════════════════════════════════════════════════════════════════ -->
+  <div id="rechazoModal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content rechazo-content">
+      <h2>❌ Motivo del Rechazo</h2>
+      <textarea
+        id="motivoRechazo"
+        placeholder="Describe por qué se rechaza la ficha para que el alumno pueda corregirla…"
+        maxlength="500"
+      ></textarea>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-rechazar" onclick="guardarRechazo()">Guardar Rechazo</button>
+        <button onclick="cerrarRechazo()" style="background:#e0e0e0;color:#333;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast de notificación -->
+  <div id="profesor-toast" style="opacity:0;"></div>
+
+  <!-- ═══════════════════════════════════════════════════════════════════
+       SCRIPTS
+  ════════════════════════════════════════════════════════════════════ -->
+  <script type="module" src="js/config-firebase.js"></script>
+  <script type="module" src="js/profesor.js"></script>
+
+  <!-- Guarda de ruta: redirige a alumnos que no sean profesor -->
+  <script type="module">
+    import { esProfesor } from './js/config-firebase.js';
+    window.addEventListener('load', async () => {
+      if (!await esProfesor()) {
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+
+  <script>
+    /* ── Funciones de UI puras (sin Firebase) ──────────────────────── */
+
+    /**
+     * Alterna entre los tres tabs del panel.
+     * @param {'pendientes'|'aprobadas'|'rechazadas'} tab
+     */
+    function mostrarTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+        const tabs = ['pendientes', 'aprobadas', 'rechazadas'];
+        const activo = tabs[i] === tab;
+        btn.classList.toggle('active', activo);
+        btn.setAttribute('aria-selected', activo);
+      });
+      ['pendientes', 'aprobadas', 'rechazadas'].forEach(t => {
+        document.getElementById(`${t}-tab`)
+          .classList.toggle('active', t === tab);
+      });
+    }
+
+    /** Cierra el modal de detalle de ficha */
+    function cerrarModal() {
+      document.getElementById('fichaModal').classList.add('hidden');
+    }
+
+    /** Abre el modal de motivo de rechazo */
+    function abrirRechazo() {
+      document.getElementById('motivoRechazo').value = '';
+      document.getElementById('rechazoModal').classList.remove('hidden');
+    }
+
+    /** Cierra el modal de rechazo */
+    function cerrarRechazo() {
+      document.getElementById('rechazoModal').classList.add('hidden');
+    }
+
+    /** Muestra un toast temporal */
+    function mostrarToastProfesor(msg, tipo = 'exito') {
+      const toast = document.getElementById('profesor-toast');
+      toast.textContent = msg;
+      toast.style.background = tipo === 'exito' ? '#1B5E20' : '#c62828';
+      toast.style.color       = 'white';
+      toast.style.opacity     = '1';
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => { toast.style.opacity = '0'; }, 3500);
+    }
+
+    /* Cerrar modales con Escape */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { cerrarModal(); cerrarRechazo(); }
+    });
+
+    /* Cerrar modales al hacer click fuera del contenido */
+    document.getElementById('fichaModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) cerrarModal();
+    });
+    document.getElementById('rechazoModal').addEventListener('click', e => {
+      if (e.target === e.currentTarget) cerrarRechazo();
+    });
+
+    /* Exponer al scope global para profesor.js */
+    window.mostrarTab           = mostrarTab;
+    window.cerrarModal          = cerrarModal;
+    window.abrirRechazo         = abrirRechazo;
+    window.cerrarRechazo        = cerrarRechazo;
+    window.mostrarToastProfesor = mostrarToastProfesor;
+
+    /* Inicializar */
+    window.addEventListener('DOMContentLoaded', () => {
+      if (typeof init === 'function') init();
+    });
+  </script>
+
+</body>
+</html>

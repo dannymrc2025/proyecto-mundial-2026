@@ -1,0 +1,10 @@
+node_modules/
+dist/
+.env
+.env.local
+.DS_Store
+*.log
+
+# Ignorar config de Firebase si tiene credenciales reales
+# Descomenta la línea de abajo cuando reemplaces los placeholders:
+# js/config-firebase.js

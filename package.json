@@ -1,0 +1,20 @@
+{
+  "name": "proyecto-mundial-2026",
+  "version": "1.0.0",
+  "description": "App educativa interactiva sobre los 48 países participantes del Mundial 2026.",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^12.13.0"
+  },
+  "devDependencies": {
+    "vite": "^8.0.13"
+  }
+}

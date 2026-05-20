@@ -1,0 +1,24 @@
+{
+  "rules": {
+    "paises": {
+      ".read": true,
+      ".write": false
+    },
+    "fichas": {
+      ".read": true,
+      "$pais": {
+        ".write": "root.child('usuarios').child(auth.uid).child('rol').val() === 'alumno'"
+      }
+    },
+    "validacion": {
+      ".read": "root.child('usuarios').child(auth.uid).child('rol').val() === 'profesor'",
+      ".write": "root.child('usuarios').child(auth.uid).child('rol').val() === 'profesor'"
+    },
+    "usuarios": {
+      ".read": "auth != null",
+      "$uid": {
+        ".write": "$uid === auth.uid"
+      }
+    }
+  }
+}

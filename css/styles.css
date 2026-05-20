@@ -1,0 +1,18 @@
+/* Estilos principales - Mundial 2026
+ * Paleta Selva Maya:
+ *   --bosque-oscuro : #0D3B2B
+ *   --verde-profundo: #1B5E20
+ *   --verde-claro   : #4CAF50
+ *   --tierra        : #6D4C41
+ *   --tierra-clara  : #D4A574
+ */
+
+:root {
+  --bosque-oscuro:  #0D3B2B;
+  --verde-profundo: #1B5E20;
+  --verde-claro:    #4CAF50;
+  --tierra:         #6D4C41;
+  --tierra-clara:   #D4A574;
+}
+
+/* Mobile-first base styles */
