@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Mundial 2026 - 48 Países</title>
     
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     
     <style>
         * {
@@ -22,7 +21,7 @@
 
         .main-container {
             display: flex;
-            height: 100vh;
+            height: calc(100vh - 52px);
             gap: 0;
             overflow: hidden;
         }
@@ -30,7 +29,30 @@
         #mapContainer {
             flex: 1;
             position: relative;
-            background: #e4e4e4;
+            background: #a8d5e5;
+            overflow: hidden;
+        }
+
+        /* ── Estilos mapa D3 ──────────────────────────────────────── */
+        .country { transition: fill 0.15s; }
+        .country.qualified { fill: #2E7D32; cursor: pointer; }
+        .country.qualified:hover { fill: #43A047; }
+        .country.selected { fill: #FFC107 !important; }
+        .country.other { fill: #d4d4d4; }
+
+        #map-tooltip {
+            position: absolute;
+            background: rgba(13,59,43,0.92);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s;
+            z-index: 100;
+            white-space: nowrap;
         }
 
         .controls-info {
@@ -402,39 +424,174 @@
             background: #555;
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .side-panels {
-                width: 100%;
-                position: absolute;
-                bottom: 0;
-                max-height: 50vh;
-                border-top: 1px solid #e0e0e0;
-            }
+        /* ── Top Navigation Bar ─────────────────────────────────────── */
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #0D3B2B 0%, #1B5E20 100%);
+            color: white;
+            padding: 0 16px;
+            height: 52px;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+            flex-shrink: 0;
+        }
 
+        .nav-title {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+        }
+
+        .btn-alumno {
+            background: #4CAF50;
+            color: white;
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-alumno:hover {
+            background: #388E3C;
+            transform: translateY(-1px);
+        }
+
+        .btn-alumno:active {
+            transform: translateY(0);
+        }
+
+        /* ── Responsive Mobile ──────────────────────────────────────── */
+        @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
+                height: calc(100vh - 52px);
             }
 
             #mapContainer {
+                height: 52vh;
+                flex: none;
+            }
+
+            .side-panels {
+                width: 100%;
                 flex: 1;
+                position: relative;
+                bottom: auto;
+                max-height: none;
+                overflow: hidden;
+                border-top: 2px solid #0D3B2B;
+            }
+
+            .countries-list {
+                width: 160px;
+            }
+
+            /* Controles más compactos en móvil */
+            .controls-info {
+                top: 8px;
+                left: 8px;
+                padding: 6px 8px;
+            }
+
+            .controls-info h4 {
+                font-size: 11px;
+                margin-bottom: 4px;
+            }
+
+            /* Ocultar instrucciones de escritorio en móvil */
+            .controls-info p {
+                display: none;
+            }
+
+            .legend {
+                bottom: 6px;
+                left: 6px;
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            /* Touch targets más grandes */
+            .country-item {
+                padding: 13px 8px;
+            }
+
+            .country-item-name {
+                font-size: 13px;
+            }
+
+            .tab-btn {
+                padding: 12px 6px;
+                font-size: 12px;
+            }
+
+            .list-header {
+                padding: 12px;
+                font-size: 13px;
+            }
+
+            .panel-header {
+                padding: 10px 12px;
+            }
+
+            .panel-content {
+                padding: 10px;
+            }
+        }
+
+        /* ── Pantallas muy pequeñas (< 480px) ──────────────────────── */
+        @media (max-width: 480px) {
+            .top-nav {
+                height: 48px;
+            }
+
+            .main-container {
+                height: calc(100vh - 48px);
+            }
+
+            .nav-title {
+                font-size: 14px;
+            }
+
+            .btn-alumno {
+                padding: 7px 14px;
+                font-size: 13px;
+            }
+
+            #mapContainer {
+                height: 45vh;
+            }
+
+            .countries-list {
+                width: 140px;
             }
         }
     </style>
 </head>
 <body>
+    <nav class="top-nav">
+        <span class="nav-title">⚽ Mundial 2026</span>
+        <a href="agregar-ficha.html" class="btn-alumno">📚 Módulo Alumno</a>
+    </nav>
+
     <div class="main-container">
         <div id="mapContainer">
-            <div class="controls-info">
-                <h4>🗺️ Navega</h4>
-                <p>🖱️ Arrastra para mover</p>
-                <p>🔍 Scroll para zoom</p>
-                <p>👆 Click en país</p>
-            </div>
+            <div id="map-tooltip"></div>
             <div class="legend">
-                <p><strong>📍 48 Países</strong></p>
-                <p>🟢 País disponible</p>
-                <p>🟡 Ficha en revisión</p>
+                <p><strong>🌍 48 Países</strong></p>
+                <p>🟩 País clasificado</p>
+                <p>🟨 País seleccionado</p>
+                <p>📍 País pequeño</p>
             </div>
         </div>
 
@@ -465,8 +622,9 @@
         </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- D3.js + TopoJSON -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
 
     <!-- Firebase SDK v9+ (modular) -->
     <script type="module">
@@ -491,7 +649,26 @@
         const db = getDatabase(app);
 
         // Global variables
-        let map, markers = {}, paises = {}, currentCountry = null;
+        let paises = {}, currentCountry = null;
+
+        // Mapeo ISO numérico → código alpha-2
+        const isoNumeric = {
+            'MX': 484, 'ZA': 710, 'KR': 410, 'CZ': 203,
+            'CA': 124, 'BA':  70, 'QA': 634, 'CH': 756,
+            'BR':  76, 'MA': 504, 'HT': 332,
+            'US': 840, 'PY': 600, 'AU':  36, 'TR': 792,
+            'DE': 276, 'CW': 531, 'CI': 384, 'EC': 218,
+            'NL': 528, 'JP': 392, 'SE': 752, 'TN': 788,
+            'BE':  56, 'EG': 818, 'IR': 364, 'NZ': 554,
+            'ES': 724, 'CV': 132, 'SA': 682, 'UY': 858,
+            'FR': 250, 'SN': 686, 'IQ': 368, 'NO': 578,
+            'AR':  32, 'DZ':  12, 'AT':  40, 'JO': 400,
+            'PT': 620, 'CD': 180, 'UZ': 860, 'CO': 170,
+            'GB': 826, 'HR': 191, 'GH': 288, 'PA': 591
+        };
+        const numericToCode = Object.fromEntries(
+            Object.entries(isoNumeric).map(([a2, n]) => [n, a2])
+        );
 
         // Datos de grupos
         const grupos = {
@@ -520,39 +697,156 @@
                     paises[pais.codigo] = pais;
                 });
 
-                init();
+                await init();
             } catch (error) {
                 console.error('Error cargando paises.json:', error);
             }
         }
 
-        // Inicializar mapa
-        function init() {
-            // Crear mapa
-            map = L.map('mapContainer').setView([20, 0], 3);
+        // Inicializar mapa con D3
+        async function init() {
+            const viewW = 960, viewH = 500;
+            const tooltip = document.getElementById('map-tooltip');
 
-            // Tile layer
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 19,
-                attribution: '© OpenStreetMap contributors'
-            }).addTo(map);
+            const svg = d3.select('#mapContainer')
+                .append('svg')
+                .attr('viewBox', `0 0 ${viewW} ${viewH}`)
+                .attr('preserveAspectRatio', 'xMidYMid meet')
+                .style('width', '100%')
+                .style('height', '100%')
+                .style('display', 'block');
 
-            // Crear marcadores
-            Object.entries(paises).forEach(([codigo, pais]) => {
-                const marker = L.circleMarker([pais.latitud, pais.longitud], {
-                    radius: 7,
-                    fillColor: '#2196F3',
-                    color: '#fff',
-                    weight: 2,
-                    opacity: 1,
-                    fillOpacity: 0.85
-                }).addTo(map);
+            // Degradado océano
+            const defs = svg.append('defs');
+            const grad = defs.append('linearGradient')
+                .attr('id', 'oceanGrad').attr('x1','0%').attr('y1','0%').attr('x2','0%').attr('y2','100%');
+            grad.append('stop').attr('offset','0%').attr('stop-color','#c5e8f5');
+            grad.append('stop').attr('offset','100%').attr('stop-color','#90c8e0');
 
-                marker.bindTooltip(`${pais.emoji} ${pais.nombre}`, { permanent: true, direction: 'top' });
-                marker.on('click', () => select(codigo));
+            const projection = d3.geoNaturalEarth1().scale(153).translate([viewW/2, viewH/2]);
+            const path = d3.geoPath().projection(projection);
 
-                markers[codigo] = marker;
+            // Esfera — océano
+            svg.append('path')
+                .datum({type:'Sphere'})
+                .attr('d', path)
+                .attr('fill','url(#oceanGrad)')
+                .attr('stroke','#7ab8d4')
+                .attr('stroke-width', 0.8);
+
+            // Graticule sutil
+            svg.append('path')
+                .datum(d3.geoGraticule()())
+                .attr('d', path)
+                .attr('fill','none')
+                .attr('stroke','rgba(255,255,255,0.2)')
+                .attr('stroke-width', 0.4);
+
+            // Cargar mapa mundial
+            const world = await d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+            const countries = topojson.feature(world, world.objects.countries);
+
+            const countryPaths = svg.selectAll('.country')
+                .data(countries.features)
+                .join('path')
+                .attr('class', d => 'country ' + (numericToCode[+d.id] ? 'qualified' : 'other'))
+                .attr('d', path)
+                .attr('stroke', 'white')
+                .attr('stroke-width', 0.4)
+                .on('mouseover', function(event, d) {
+                    const c = numericToCode[+d.id];
+                    if (!c) return;
+                    tooltip.textContent = `${paises[c].emoji} ${paises[c].nombre}`;
+                    tooltip.style.opacity = 1;
+                })
+                .on('mousemove', function(event) {
+                    const rect = document.getElementById('mapContainer').getBoundingClientRect();
+                    tooltip.style.left = (event.clientX - rect.left + 12) + 'px';
+                    tooltip.style.top  = (event.clientY - rect.top  - 36) + 'px';
+                })
+                .on('mouseout', () => { tooltip.style.opacity = 0; })
+                .on('click', (event, d) => {
+                    const c = numericToCode[+d.id];
+                    if (c) select(c);
+                });
+
+            // Bordes entre países
+            svg.append('path')
+                .datum(topojson.mesh(world, world.objects.countries, (a, b) => a !== b))
+                .attr('d', path)
+                .attr('fill', 'none')
+                .attr('stroke', 'white')
+                .attr('stroke-width', 0.3);
+
+            // Marcadores para países pequeños / islas
+            const smallCountriesData = [
+                { codigo: 'SC', lat: 55.9533, lon:  -3.1883 },
+                { codigo: 'HT', lat: 18.9712, lon: -72.2852 },
+                { codigo: 'CW', lat: 12.1696, lon: -68.9900 },
+                { codigo: 'CV', lat: 15.0557, lon: -23.6345 },
+                { codigo: 'QA', lat: 25.2854, lon:  51.5310 },
+            ];
+
+            const pinCircles = {};
+
+            smallCountriesData.forEach(({ codigo, lat, lon }) => {
+                const p = paises[codigo];
+                if (!p) return;
+                const [x, y] = projection([lon, lat]);
+                if (isNaN(x) || isNaN(y)) return;
+
+                const g = svg.append('g')
+                    .attr('transform', `translate(${x},${y})`)
+                    .style('cursor', 'pointer')
+                    .on('mouseover', () => {
+                        tooltip.textContent = `${p.emoji} ${p.nombre}`;
+                        tooltip.style.opacity = 1;
+                    })
+                    .on('mousemove', (event) => {
+                        const rect = document.getElementById('mapContainer').getBoundingClientRect();
+                        tooltip.style.left = (event.clientX - rect.left + 12) + 'px';
+                        tooltip.style.top  = (event.clientY - rect.top  - 36) + 'px';
+                    })
+                    .on('mouseout', () => { tooltip.style.opacity = 0; })
+                    .on('click', () => select(codigo));
+
+                g.append('line')
+                    .attr('x1', 0).attr('y1', -4).attr('x2', 0).attr('y2', -11)
+                    .attr('stroke', 'rgba(0,0,0,0.3)').attr('stroke-width', 1.5);
+
+                g.append('circle')
+                    .attr('cy', -19).attr('r', 8)
+                    .attr('fill', 'rgba(0,0,0,0.15)')
+                    .attr('transform', 'translate(1,1)');
+
+                const circle = g.append('circle')
+                    .attr('cy', -19).attr('r', 8)
+                    .attr('fill', '#2E7D32')
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', 2);
+
+                pinCircles[codigo] = circle;
+
+                g.append('text')
+                    .attr('y', -16)
+                    .attr('text-anchor', 'middle')
+                    .attr('dominant-baseline', 'middle')
+                    .attr('font-size', '9px')
+                    .style('pointer-events', 'none')
+                    .text(p.emoji);
             });
+
+            // Actualizar colores mapa + pins al seleccionar
+            window._updateMapColors = function() {
+                countryPaths.attr('class', d => {
+                    const c = numericToCode[+d.id];
+                    if (!c) return 'country other';
+                    return 'country qualified' + (c === currentCountry ? ' selected' : '');
+                });
+                Object.entries(pinCircles).forEach(([codigo, circle]) => {
+                    circle.attr('fill', codigo === currentCountry ? '#FFC107' : '#2E7D32');
+                });
+            };
 
             renderPaises();
             renderGrupos();
@@ -565,7 +859,7 @@
             );
 
             const html = sorted.map(([codigo, pais]) => `
-                <div class="country-item" onclick="select('${codigo}')">
+                <div class="country-item" data-codigo="${codigo}" onclick="select('${codigo}')">
                     <span class="country-item-emoji">${pais.emoji}</span>
                     <span class="country-item-name">${pais.nombre}</span>
                     <span class="country-item-code">${codigo}</span>
@@ -583,7 +877,7 @@
                 const paisesGrupo = grupo.paises.map(codigo => {
                     const pais = paises[codigo];
                     return `
-                        <div class="country-item" onclick="select('${codigo}')">
+                        <div class="country-item" data-codigo="${codigo}" onclick="select('${codigo}')">
                             <span class="country-item-emoji">${pais.emoji}</span>
                             <span class="country-item-name">${pais.nombre}</span>
                             <span class="country-item-code">${codigo}</span>
@@ -630,33 +924,15 @@
             currentCountry = codigo;
             const pais = paises[codigo];
 
-            // Actualizar marcadores
+            // Actualizar lista lateral
             document.querySelectorAll('.country-item').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.country-item').forEach(el => {
-                if (el.textContent.includes(pais.nombre)) {
-                    el.classList.add('active');
-                }
+            document.querySelectorAll(`[data-codigo="${codigo}"]`).forEach(el => {
+                el.classList.add('active');
+                el.scrollIntoView({ block: 'nearest' });
             });
 
-            // Animar marcador
-            Object.values(markers).forEach(marker => {
-                const path = marker._path;
-                if (path) {
-                    path.classList.remove('marker-pulse', 'marker-blink');
-                }
-                marker.setRadius(7);
-                marker.setStyle({ weight: 2, fillOpacity: 0.85 });
-            });
-
-            const selectedMarker = markers[codigo];
-            if (selectedMarker._path) {
-                selectedMarker._path.classList.add('marker-pulse', 'marker-blink');
-            }
-            selectedMarker.setRadius(14);
-            selectedMarker.setStyle({ weight: 3, fillOpacity: 1 });
-
-            // Zoom
-            map.setView([pais.latitud, pais.longitud], 6);
+            // Actualizar colores del mapa
+            if (window._updateMapColors) window._updateMapColors();
 
             // Info panel
             const html = `
