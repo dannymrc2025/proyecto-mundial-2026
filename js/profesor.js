@@ -147,18 +147,14 @@ function escHtml(str) {
 
 async function init() {
   try {
-    // Autenticación anónima para leer Firebase
+    // Autenticación anónima para poder leer/escribir en Firebase
     await signInAnonymously();
   } catch (err) {
     console.warn('[profesor.js] Auth anónima falló:', err);
   }
 
-  // Verificar rol de profesor en Firebase
-  if (!await esProfesor()) {
-    alert('Acceso restringido al profesor.');
-    window.location.href = 'index.html';
-    return;
-  }
+  // El acceso ya está protegido por la contraseña en index.html (2707)
+  // No se verifica rol en Firebase para evitar conflictos entre dispositivos/navegadores
 
   // Listener en tiempo real sobre todas las fichas
   const fichasRef = ref(db, 'fichas/');
