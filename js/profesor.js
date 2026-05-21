@@ -5,7 +5,7 @@
  */
 
 import { auth, db, signInAnonymously } from './config-firebase.js';
-import { ref, get, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
+import { ref, get, set, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
 import { signOut }               from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
 // ─── Estado global ──────────────────────────────────────────────────────────
@@ -122,6 +122,7 @@ function renderTarjeta(key, ficha) {
         <button class="btn-ver"      onclick="verFicha('${key}')">👁️ Vista Previa</button>
         <button class="btn-aprobar"  onclick="aprobarFicha('${key}')">✅ Aprobar</button>
         <button class="btn-rechazar" onclick="abrirRechazoDirecto('${key}')">❌ Rechazar</button>
+        <button class="btn-eliminar" onclick="eliminarFicha('${key}')">🗑️ Eliminar</button>
       </div>
     </div>`;
 }
@@ -417,6 +418,31 @@ async function guardarRechazo() {
   }
 }
 
+// ─── ELIMINAR FICHA ──────────────────────────────────────────────────────────
+
+async function eliminarFicha(key) {
+  const target = key || fichaActual;
+  if (!target) return;
+
+  if (!confirm('¿Eliminar esta ficha permanentemente? Esta acción no se puede deshacer.')) return;
+
+  const parts = target.split('/');
+  const pais  = parts[0];
+  const uid   = parts[1];
+  const base  = uid ? `fichas/${pais}/${uid}` : `fichas/${pais}`;
+
+  try {
+    await remove(ref(db, base));
+    mostrarToast('🗑️ Ficha eliminada.', 'error');
+    cerrarModal();
+    fichaActual = null;
+    console.log(`[profesor.js] Ficha eliminada: ${base}`);
+  } catch (err) {
+    console.error('[profesor.js] eliminarFicha error:', err);
+    mostrarToast('Error al eliminar la ficha.', 'error');
+  }
+}
+
 // ─── LOGOUT ─────────────────────────────────────────────────────────────────
 
 async function logout() {
@@ -441,3 +467,4 @@ window.guardarRechazo      = guardarRechazo;
 window.cerrarRechazo       = cerrarRechazo;
 window.logout              = logout;
 window.cargarFichas        = cargarFichas;
+window.eliminarFicha       = eliminarFicha;
