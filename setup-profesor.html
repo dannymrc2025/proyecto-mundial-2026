@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configurar Profesor — Mundial 2026</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0D3B2B;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .card h1 {
+      font-size: 22px;
+      color: #0D3B2B;
+      margin-bottom: 8px;
+    }
+
+    .card p.subtitle {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 28px;
+    }
+
+    .uid-box {
+      background: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 12px 16px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .uid-box label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .uid-box span {
+      font-size: 12px;
+      color: #333;
+      word-break: break-all;
+      font-family: monospace;
+    }
+
+    button#btn {
+      background: #1B5E20;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.2s;
+    }
+
+    button#btn:hover:not(:disabled) { background: #0D3B2B; }
+    button#btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .msg {
+      margin-top: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      display: none;
+    }
+
+    .msg.success { background: #e8f5e9; color: #1B5E20; display: block; }
+    .msg.error   { background: #ffebee; color: #c62828; display: block; }
+
+    .status {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🏫 Configurar Rol de Profesor</h1>
+    <p class="subtitle">Asigna el rol de profesor a esta sesión en Firebase</p>
+
+    <div class="uid-box">
+      <label>Tu UID</label>
+      <span id="uid-display">Iniciando sesión…</span>
+    </div>
+
+    <p class="status" id="status">Conectando con Firebase…</p>
+
+    <button id="btn" disabled>Establecer como Profesor</button>
+
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp }      from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey:            "AIzaSyDVLLTC-kqLBJ0Me06rqsu5BRneQiFkoE4",
+      authDomain:        "mundial-2026-12e6c.firebaseapp.com",
+      databaseURL:       "https://mundial-2026-12e6c-default-rtdb.firebaseio.com",
+      projectId:         "mundial-2026-12e6c",
+      storageBucket:     "mundial-2026-12e6c.firebasestorage.app",
+      messagingSenderId: "498565136746",
+      appId:             "1:498565136746:web:3a73c5e92a5bdfc5726513"
+    };
+
+    const app  = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db   = getDatabase(app);
+
+    const uidDisplay = document.getElementById('uid-display');
+    const statusEl   = document.getElementById('status');
+    const btn        = document.getElementById('btn');
+    const msg        = document.getElementById('msg');
+
+    // Iniciar sesión anónima y mostrar UID
+    try {
+      await signInAnonymously(auth);
+      const uid = auth.currentUser.uid;
+      uidDisplay.textContent = uid;
+      statusEl.textContent   = '✅ Sesión iniciada correctamente';
+      btn.disabled = false;
+
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        btn.textContent = 'Guardando…';
+        msg.className = 'msg';
+        msg.style.display = 'none';
+
+        try {
+          // Guardar en profesores/{uid} (lo que verifica esProfesor())
+          await set(ref(db, `profesores/${uid}`), { asignadoEn: Date.now() });
+          // Guardar también en usuarios/{uid}/rol
+          await set(ref(db, `usuarios/${uid}/rol`), 'profesor');
+
+          msg.className = 'msg success';
+          msg.textContent = '✅ Rol de profesor asignado';
+
+          setTimeout(() => {
+            window.location.href = 'panel-profesor.html';
+          }, 2000);
+        } catch (err) {
+          console.error(err);
+          msg.className = 'msg error';
+          msg.textContent = '❌ Error al guardar: ' + err.message;
+          btn.disabled = false;
+          btn.textContent = 'Establecer como Profesor';
+        }
+      });
+
+    } catch (err) {
+      console.error(err);
+      uidDisplay.textContent = 'Error al iniciar sesión';
+      statusEl.textContent   = '❌ No se pudo conectar con Firebase';
+      msg.className = 'msg error';
+      msg.textContent = '❌ ' + err.message;
+    }
+  </script>
+</body>
+</html>
