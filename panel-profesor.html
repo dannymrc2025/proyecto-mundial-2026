@@ -420,15 +420,7 @@
   <script type="module" src="js/config-firebase.js"></script>
   <script type="module" src="js/profesor.js"></script>
 
-  <!-- Guarda de ruta: redirige a alumnos que no sean profesor -->
-  <script type="module">
-    import { esProfesor } from './js/config-firebase.js';
-    window.addEventListener('load', async () => {
-      if (!await esProfesor()) {
-        window.location.href = 'index.html';
-      }
-    });
-  </script>
+  <!-- Acceso protegido por contraseña en index.html (2707) — sin verificación de UID -->
 
   <script>
     /* ── Funciones de UI puras (sin Firebase) ──────────────────────── */
