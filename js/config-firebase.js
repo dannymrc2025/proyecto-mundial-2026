@@ -5,7 +5,7 @@
 
 // Import Firebase SDK from CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getAuth, signInAnonymously as _signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getAuth, signInAnonymously as _signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
 import { getDatabase, ref, get, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
 // ================================================================================
@@ -74,11 +74,15 @@ export async function saveData(path, data) {
 // VERIFICAR SI EL USUARIO ACTUAL ES PROFESOR
 // ================================================================================
 
-export async function esProfesor() {
-  const user = auth.currentUser;
-  if (!user) return false;
-  const snapshot = await get(ref(db, `profesores/${user.uid}`));
-  return snapshot.exists();
+export function esProfesor() {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe();
+      if (!user) { resolve(false); return; }
+      const snapshot = await get(ref(db, `profesores/${user.uid}`));
+      resolve(snapshot.exists());
+    });
+  });
 }
 
 // ================================================================================
