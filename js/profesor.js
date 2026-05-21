@@ -4,9 +4,9 @@
  * Depende de: config-firebase.js (auth, db, signInAnonymously)
  */
 
-import { auth, db, signInAnonymously, esProfesor } from './config-firebase.js';
+import { auth, db, signInAnonymously } from './config-firebase.js';
 import { ref, get, set, onValue } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
-import { signOut }               from 'firebase/auth';
+import { signOut }               from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js';
 
 // ─── Estado global ──────────────────────────────────────────────────────────
 let fichasActuales = {};   // Cache de todas las fichas cargadas
