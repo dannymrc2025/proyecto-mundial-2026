@@ -112,6 +112,101 @@ function templateDestino(idx) {
     </div>`;
 }
 
+// ─── CARGAR DESDE JSON (OPCIÓN RÁPIDA) ────────────────────────────────────────
+
+function cargarDesdeJSON() {
+  const jsonInput = document.getElementById('jsonInput');
+  const statusDiv = document.getElementById('jsonStatus');
+  if (!jsonInput || !statusDiv) return;
+
+  const raw = jsonInput.value.trim();
+  if (!raw) {
+    statusDiv.innerHTML = '<div style="background:#ffcdd2;padding:10px;border-radius:4px;color:#c62828;border-left:4px solid #F44336;">❌ Pega el JSON antes de hacer clic.</div>';
+    return;
+  }
+
+  try {
+    const ficha = JSON.parse(raw);
+
+    if (!ficha.codigo) throw new Error('Falta el campo "codigo" (Ej: "MX")');
+    if (!Array.isArray(ficha.cientificos) || ficha.cientificos.length < 2)
+      throw new Error('Se necesitan al menos 2 científicos en el JSON');
+    if (!Array.isArray(ficha.destinos) || ficha.destinos.length < 2)
+      throw new Error('Se necesitan al menos 2 destinos en el JSON');
+
+    // 1. País
+    const paisSel = document.getElementById('pais');
+    if (paisSel) paisSel.value = ficha.codigo;
+
+    // 2. Autores → grupo y alumno1/2/3
+    if (ficha.autores) {
+      const grupoSel = document.getElementById('grupo');
+      if (grupoSel && ficha.autores.grupo) grupoSel.value = ficha.autores.grupo;
+      const nombres = Array.isArray(ficha.autores.nombres) ? ficha.autores.nombres : [];
+      const a1 = document.getElementById('alumno1');
+      const a2 = document.getElementById('alumno2');
+      const a3 = document.getElementById('alumno3');
+      if (a1) a1.value = nombres[0] || '';
+      if (a2) a2.value = nombres[1] || '';
+      if (a3) a3.value = nombres[2] || '';
+    }
+
+    // 3. Científicos
+    const cientContainer = document.getElementById('cientificosContainer');
+    if (cientContainer) {
+      cientContainer.innerHTML = '';
+      cientificosCount = 0;
+      ficha.cientificos.forEach(c => {
+        cientificosCount++;
+        const id = cientificosCount;
+        cientContainer.insertAdjacentHTML('beforeend', templateCientifico(id));
+        setVal(`cient_nombre_${id}`,     c.nombre      || '');
+        setVal(`cient_disciplina_${id}`, c.disciplina  || '');
+        setVal(`cient_aporte_${id}`,     c.aporte      || '');
+        setVal(`cient_anios_${id}`,      c.años || c.anios || '');
+      });
+    }
+
+    // 4. Destinos
+    const destContainer = document.getElementById('destinosContainer');
+    if (destContainer) {
+      destContainer.innerHTML = '';
+      destinosCount = 0;
+      ficha.destinos.forEach(d => {
+        destinosCount++;
+        const id = destinosCount;
+        destContainer.insertAdjacentHTML('beforeend', templateDestino(id));
+        setVal(`dest_nombre_${id}`,      d.nombre      || '');
+        setVal(`dest_descripcion_${id}`, d.descripcion || '');
+        setVal(`dest_url_${id}`,         d.enlace || d.url || '');
+      });
+    }
+
+    // 5. Actualizar vista previa y contadores
+    mostrarPrevia();
+
+    // 6. Éxito
+    statusDiv.innerHTML = `
+      <div style="background:#c8e6c9;padding:10px;border-radius:4px;color:#2e7d32;border-left:4px solid #4CAF50;">
+        ✅ JSON cargado exitosamente<br>
+        <strong>${ficha.nombre || ficha.codigo}</strong> — ${ficha.cientificos.length} científicos, ${ficha.destinos.length} destinos
+      </div>`;
+
+    // 7. Scroll suave a la vista previa
+    setTimeout(() => {
+      document.getElementById('previewJSON')?.scrollIntoView({ behavior: 'smooth' });
+    }, 400);
+
+  } catch (error) {
+    statusDiv.innerHTML = `
+      <div style="background:#ffcdd2;padding:10px;border-radius:4px;color:#c62828;border-left:4px solid #F44336;">
+        ❌ Error: ${error.message}<br>
+        <small>Verifica que el JSON sea válido y tenga la estructura correcta.</small>
+      </div>`;
+    console.error('[ficha.js] Error cargando JSON:', error);
+  }
+}
+
 // ─── INIT ────────────────────────────────────────────────────────────────────
 /**
  * Punto de entrada llamado desde DOMContentLoaded en agregar-ficha.html.
@@ -506,3 +601,4 @@ window.limpiarForm       = limpiarForm;
 window.enviarFicha       = enviarFicha;
 // Alias usado por el submit listener en agregar-ficha.html
 window.enviarFirebase    = enviarFicha;
+window.cargarDesdeJSON   = cargarDesdeJSON;
