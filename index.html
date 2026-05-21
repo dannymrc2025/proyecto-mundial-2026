@@ -467,6 +467,96 @@
             transform: translateY(-1px);
         }
 
+        .btn-maestro {
+            background: #FFC107;
+            color: #0D3B2B;
+            border: none;
+            padding: 8px 18px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .btn-maestro:hover {
+            background: #FFB300;
+            transform: translateY(-1px);
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        /* ── Modal contraseña ──────────────────────────────────────── */
+        #modalMaestro {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #modalMaestro.visible { display: flex; }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 28px 24px;
+            width: 320px;
+            max-width: 90vw;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .modal-box h3 { color: #0D3B2B; margin-bottom: 8px; font-size: 18px; }
+        .modal-box p  { color: #666; font-size: 13px; margin-bottom: 16px; }
+
+        .modal-box input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 18px;
+            text-align: center;
+            letter-spacing: 6px;
+            margin-bottom: 16px;
+        }
+
+        .modal-box input:focus { outline: none; border-color: #1B5E20; }
+
+        .modal-buttons { display: flex; gap: 10px; }
+
+        .modal-btn-ok {
+            flex: 1; padding: 10px;
+            background: #1B5E20; color: white;
+            border: none; border-radius: 6px;
+            font-weight: 700; cursor: pointer; font-size: 14px;
+        }
+
+        .modal-btn-ok:hover { background: #0D3B2B; }
+
+        .modal-btn-cancel {
+            flex: 1; padding: 10px;
+            background: #eee; color: #555;
+            border: none; border-radius: 6px;
+            font-weight: 600; cursor: pointer; font-size: 14px;
+        }
+
+        .modal-error {
+            color: #c62828; font-size: 12px;
+            margin-bottom: 10px; display: none;
+        }
+
         .btn-alumno:active {
             transform: translateY(0);
         }
@@ -579,9 +669,28 @@
     </style>
 </head>
 <body>
+    <!-- Modal contraseña maestro -->
+    <div id="modalMaestro" onclick="if(event.target===this)cerrarModalMaestro()">
+      <div class="modal-box">
+        <h3>🎓 Módulo Maestro</h3>
+        <p>Ingresa la contraseña para continuar</p>
+        <input type="password" id="inputClaveMaestro" placeholder="••••"
+          maxlength="20" oninput="document.getElementById('modalError').style.display='none'"
+          onkeydown="if(event.key==='Enter')verificarClaveMaestro()">
+        <p id="modalError" class="modal-error">❌ Contraseña incorrecta</p>
+        <div class="modal-buttons">
+          <button class="modal-btn-ok" onclick="verificarClaveMaestro()">Entrar</button>
+          <button class="modal-btn-cancel" onclick="cerrarModalMaestro()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+
     <nav class="top-nav">
         <span class="nav-title">⚽ Mundial 2026</span>
-        <a href="agregar-ficha.html" class="btn-alumno">📚 Módulo Alumno</a>
+        <div class="nav-buttons">
+          <a href="agregar-ficha.html" class="btn-alumno">📚 Módulo Alumno</a>
+          <button class="btn-maestro" onclick="abrirModalMaestro()">🎓 Maestro</button>
+        </div>
     </nav>
 
     <div class="main-container">
@@ -837,7 +946,35 @@
             });
 
             // Actualizar colores mapa + pins al seleccionar
-            window._updateMapColors = function() {
+            // ── Acceso Módulo Maestro ──────────────────────────────────────
+        function abrirModalMaestro() {
+            document.getElementById('inputClaveMaestro').value = '';
+            document.getElementById('modalError').style.display = 'none';
+            document.getElementById('modalMaestro').classList.add('visible');
+            setTimeout(() => document.getElementById('inputClaveMaestro').focus(), 100);
+        }
+
+        function cerrarModalMaestro() {
+            document.getElementById('modalMaestro').classList.remove('visible');
+        }
+
+        function verificarClaveMaestro() {
+            const clave = document.getElementById('inputClaveMaestro').value;
+            if (clave === '2707') {
+                cerrarModalMaestro();
+                window.location.href = 'panel-profesor.html';
+            } else {
+                document.getElementById('modalError').style.display = 'block';
+                document.getElementById('inputClaveMaestro').value = '';
+                document.getElementById('inputClaveMaestro').focus();
+            }
+        }
+
+        window.abrirModalMaestro    = abrirModalMaestro;
+        window.cerrarModalMaestro   = cerrarModalMaestro;
+        window.verificarClaveMaestro = verificarClaveMaestro;
+
+        window._updateMapColors = function() {
                 countryPaths.attr('class', d => {
                     const c = numericToCode[+d.id];
                     if (!c) return 'country other';
