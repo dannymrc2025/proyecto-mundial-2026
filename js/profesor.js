@@ -98,37 +98,30 @@ function validarFicha(fichaObj) {
   return { valido: errores.length === 0, errores, advertencias };
 }
 
-/** Retorna el HTML de una tarjeta de ficha */
-function renderTarjeta(pais, ficha) {
-  const estadoLabel = { pendiente: 'Pendiente', aprobado: 'Aprobada', rechazado: 'Rechazada' };
-  const estadoClass = { pendiente: 'pending',   aprobado: 'approved',  rechazado: 'rejected'  };
-
-  const nc   = Array.isArray(ficha.cientificos) ? ficha.cientificos.length : '?';
-  const nd   = Array.isArray(ficha.destinos)    ? ficha.destinos.length    : '?';
-  const uid  = ficha.uid ? ficha.uid.slice(0, 8) + '…' : 'Anónimo';
-  const fecha = formatFecha(ficha.timestamp);
-  const est   = ficha.estado || 'pendiente';
-
-  // Sanitizar nombre del país para el título
-  const nombre = escHtml(pais);
+/** Retorna el HTML de una fila simplificada de ficha */
+function renderTarjeta(key, ficha) {
+  const nombre  = escHtml(ficha.nombre || ficha._pais || key.split('/')[0]);
+  const bandera = ficha.banderaEmoji || '🌍';
+  const grupo   = ficha.autores?.grupo ? escHtml(ficha.autores.grupo) : '—';
+  const autores = Array.isArray(ficha.autores?.nombres)
+    ? ficha.autores.nombres.map(n => escHtml(n)).join(', ')
+    : '—';
+  const fecha   = formatFecha(ficha.timestamp);
 
   return `
-    <div class="ficha-card" id="card-${pais}">
-      <div class="card-header">
-        <span class="pais">${nombre}</span>
-        <span class="fecha">${fecha}</span>
-        <span class="estado ${estadoClass[est] || 'pending'}">${estadoLabel[est] || est}</span>
+    <div class="ficha-row">
+      <div class="row-info">
+        <span class="row-bandera">${bandera}</span>
+        <div class="row-datos">
+          <span class="row-pais">${nombre}</span>
+          <span class="row-meta">Grupo <strong>${grupo}</strong>&nbsp;·&nbsp;${autores}</span>
+        </div>
+        <span class="row-fecha">${fecha}</span>
       </div>
-      <div class="card-body">
-        <p><strong>Científicos:</strong> ${nc}</p>
-        <p><strong>Destinos:</strong> ${nd}</p>
-        <p><strong>Enviado por:</strong> ${escHtml(uid)}</p>
-        ${ficha.motivoRechazo ? `<p style="color:#c62828;margin-top:6px;"><strong>Motivo:</strong> ${escHtml(ficha.motivoRechazo)}</p>` : ''}
-      </div>
-      <div class="card-actions">
-        <button class="btn-ver"      onclick="verFicha('${pais}')">👁️ Ver</button>
-        <button class="btn-aprobar"  onclick="aprobarFicha('${pais}')">✅ Aprobar</button>
-        <button class="btn-rechazar" onclick="abrirRechazoDirecto('${pais}')">❌ Rechazar</button>
+      <div class="row-actions">
+        <button class="btn-ver"      onclick="verFicha('${key}')">👁️ Vista Previa</button>
+        <button class="btn-aprobar"  onclick="aprobarFicha('${key}')">✅ Aprobar</button>
+        <button class="btn-rechazar" onclick="abrirRechazoDirecto('${key}')">❌ Rechazar</button>
       </div>
     </div>`;
 }
@@ -264,54 +257,77 @@ async function verFicha(key) {
     const ficha    = snapshot.val();
     if (!ficha) { mostrarToast('Ficha no encontrada.', 'error'); return; }
 
-    // ── Título ──────────────────────────────────────────────────────
-    const modalTitle = document.getElementById('modalTitle');
-    if (modalTitle) modalTitle.textContent = `${pais} — ${formatFecha(ficha.timestamp)}`;
+    const nombre  = escHtml(ficha.nombre   || pais);
+    const bandera = ficha.banderaEmoji     || '🌍';
+    const capital = escHtml(ficha.capital  || '—');
+    const moneda  = escHtml(ficha.moneda   || '—');
+    const grupo   = ficha.autores?.grupo   ? escHtml(ficha.autores.grupo) : '—';
+    const autores = Array.isArray(ficha.autores?.nombres)
+      ? ficha.autores.nombres.map(n => escHtml(n)).join(', ')
+      : '—';
+    const colP = ficha.coloresBandera?.primario   || '#0D3B2B';
+    const colS = ficha.coloresBandera?.secundario || '#1B5E20';
 
-    // ── Científicos ─────────────────────────────────────────────────
-    const listaCient = document.getElementById('listaCientificos');
-    if (listaCient) {
-      const cients = Array.isArray(ficha.cientificos) ? ficha.cientificos : [];
-      listaCient.innerHTML = cients.length
-        ? cients.map(c => `
-            <div class="modal-item">
-              <strong>${escHtml(c.nombre)}</strong> — ${escHtml(c.disciplina || '?')} (${escHtml(c.años || '?')})<br>
-              ${escHtml(c.aporte || '')}
-            </div>`).join('')
-        : '<p style="color:#aaa;font-size:13px;">Sin científicos registrados.</p>';
+    // Científicos
+    const cients = Array.isArray(ficha.cientificos) ? ficha.cientificos : [];
+    const cientHtml = cients.length
+      ? cients.map(c => `
+          <div class="preview-item">
+            <strong>${escHtml(c.nombre || '?')}</strong><br>
+            ${escHtml(c.aporte || '')}
+          </div>`).join('')
+      : '<p style="color:#aaa;font-size:13px;">Sin científicos registrados.</p>';
+
+    // Jugadores
+    const jugadores = Array.isArray(ficha.jugadoresEstrellas) ? ficha.jugadoresEstrellas : [];
+    const jugHtml = jugadores.length
+      ? jugadores.map(j => `
+          <div class="preview-item">
+            <strong>${escHtml(j.nombre || '?')}</strong> — ${escHtml(j.posicion || '?')}<br>
+            Club: ${escHtml(j.club || '?')}
+          </div>`).join('')
+      : '<p style="color:#aaa;font-size:13px;">Sin jugadores registrados.</p>';
+
+    // Sitios turísticos
+    const sitios = Array.isArray(ficha.sitiosTuristicos) ? ficha.sitiosTuristicos : [];
+    const sitHtml = sitios.length
+      ? sitios.map(s => `
+          <div class="preview-item">
+            <strong>${escHtml(s.nombre || '?')}</strong><br>
+            ${escHtml(s.descripcion || '')}<br>
+            ${s.enlace ? `<a href="${escHtml(s.enlace)}" target="_blank" rel="noopener noreferrer">${escHtml(s.enlace)}</a>` : ''}
+          </div>`).join('')
+      : '<p style="color:#aaa;font-size:13px;">Sin sitios registrados.</p>';
+
+    const body = document.getElementById('previewBody');
+    if (body) {
+      body.innerHTML = `
+        <div class="preview-header" style="background:linear-gradient(135deg,${colP},${colS});">
+          <span class="preview-bandera">${bandera}</span>
+          <div>
+            <div class="preview-titulo">${nombre}</div>
+            <div class="preview-subtitulo">Capital: ${capital}&nbsp;·&nbsp;Moneda: ${moneda}</div>
+          </div>
+        </div>
+        <div class="preview-section">
+          <h4>🔬 Científicos</h4>
+          ${cientHtml}
+        </div>
+        <div class="preview-section">
+          <h4>⚽ Jugadores Estrellas</h4>
+          ${jugHtml}
+        </div>
+        <div class="preview-section">
+          <h4>🏖️ Sitios Turísticos</h4>
+          ${sitHtml}
+        </div>
+        <div class="preview-autores">
+          <strong>Grupo ${grupo}</strong>&nbsp;·&nbsp;Autores: ${autores}
+          &nbsp;·&nbsp;Enviado: ${formatFecha(ficha.timestamp)}
+        </div>
+      `;
     }
 
-    // ── Destinos ─────────────────────────────────────────────────────
-    const listaDest = document.getElementById('listaDestinos');
-    if (listaDest) {
-      const dests = Array.isArray(ficha.destinos) ? ficha.destinos : [];
-      listaDest.innerHTML = dests.length
-        ? dests.map(d => `
-            <div class="modal-item">
-              <strong>${escHtml(d.nombre)}</strong><br>
-              ${escHtml(d.descripcion || '')}<br>
-              <a href="${escHtml(d.enlace || '#')}" target="_blank" rel="noopener noreferrer">${escHtml(d.enlace || '')}</a>
-            </div>`).join('')
-        : '<p style="color:#aaa;font-size:13px;">Sin destinos registrados.</p>';
-    }
-
-    // ── Validaciones ─────────────────────────────────────────────────
-    const listaVal = document.getElementById('validaciones');
-    if (listaVal) {
-      const { valido, errores, advertencias } = validarFicha(ficha);
-      const items = [
-        valido
-          ? '<li class="val-ok">✓ Ficha completa y válida</li>'
-          : errores.map(e => `<li class="val-err">✗ ${escHtml(e)}</li>`).join(''),
-        advertencias.map(a => `<li class="val-warn">⚠ ${escHtml(a)}</li>`).join(''),
-        errores.length === 0 && advertencias.length === 0
-          ? '<li class="val-ok">✓ Sin advertencias</li>'
-          : '',
-      ].join('');
-      listaVal.innerHTML = items || '<li>—</li>';
-    }
-
-    // ── Abrir modal ───────────────────────────────────────────────────
     document.getElementById('fichaModal')?.classList.remove('hidden');
 
   } catch (err) {
