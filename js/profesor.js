@@ -257,75 +257,55 @@ async function verFicha(key) {
     const ficha    = snapshot.val();
     if (!ficha) { mostrarToast('Ficha no encontrada.', 'error'); return; }
 
-    const nombre  = escHtml(ficha.nombre   || pais);
-    const bandera = ficha.banderaEmoji     || '🌍';
-    const capital = escHtml(ficha.capital  || '—');
-    const moneda  = escHtml(ficha.moneda   || '—');
-    const grupo   = ficha.autores?.grupo   ? escHtml(ficha.autores.grupo) : '—';
+    const codigo  = escHtml(ficha.codigo || pais);
+    const grupo   = ficha.autores?.grupo ? escHtml(ficha.autores.grupo) : '—';
     const autores = Array.isArray(ficha.autores?.nombres)
       ? ficha.autores.nombres.map(n => escHtml(n)).join(', ')
       : '—';
-    const colP = ficha.coloresBandera?.primario   || '#0D3B2B';
-    const colS = ficha.coloresBandera?.secundario || '#1B5E20';
-
-    // Científicos
-    const cients = Array.isArray(ficha.cientificos) ? ficha.cientificos : [];
-    const cientHtml = cients.length
-      ? cients.map(c => `
-          <div class="preview-item">
-            <strong>${escHtml(c.nombre || '?')}</strong><br>
-            ${escHtml(c.aporte || '')}
-          </div>`).join('')
-      : '<p style="color:#aaa;font-size:13px;">Sin científicos registrados.</p>';
-
-    // Jugadores
-    const jugadores = Array.isArray(ficha.jugadoresEstrellas) ? ficha.jugadoresEstrellas : [];
-    const jugHtml = jugadores.length
-      ? jugadores.map(j => `
-          <div class="preview-item">
-            <strong>${escHtml(j.nombre || '?')}</strong> — ${escHtml(j.posicion || '?')}<br>
-            Club: ${escHtml(j.club || '?')}
-          </div>`).join('')
-      : '<p style="color:#aaa;font-size:13px;">Sin jugadores registrados.</p>';
-
-    // Sitios turísticos
-    const sitios = Array.isArray(ficha.sitiosTuristicos) ? ficha.sitiosTuristicos : [];
-    const sitHtml = sitios.length
-      ? sitios.map(s => `
-          <div class="preview-item">
-            <strong>${escHtml(s.nombre || '?')}</strong><br>
-            ${escHtml(s.descripcion || '')}<br>
-            ${s.enlace ? `<a href="${escHtml(s.enlace)}" target="_blank" rel="noopener noreferrer">${escHtml(s.enlace)}</a>` : ''}
-          </div>`).join('')
-      : '<p style="color:#aaa;font-size:13px;">Sin sitios registrados.</p>';
 
     const body = document.getElementById('previewBody');
     if (body) {
       body.innerHTML = `
-        <div class="preview-header" style="background:linear-gradient(135deg,${colP},${colS});">
-          <span class="preview-bandera">${bandera}</span>
-          <div>
-            <div class="preview-titulo">${nombre}</div>
-            <div class="preview-subtitulo">Capital: ${capital}&nbsp;·&nbsp;Moneda: ${moneda}</div>
-          </div>
-        </div>
-        <div class="preview-section">
-          <h4>🔬 Científicos</h4>
-          ${cientHtml}
-        </div>
-        <div class="preview-section">
-          <h4>⚽ Jugadores Estrellas</h4>
-          ${jugHtml}
-        </div>
-        <div class="preview-section">
-          <h4>🏖️ Sitios Turísticos</h4>
-          ${sitHtml}
-        </div>
-        <div class="preview-autores">
-          <strong>Grupo ${grupo}</strong>&nbsp;·&nbsp;Autores: ${autores}
-          &nbsp;·&nbsp;Enviado: ${formatFecha(ficha.timestamp)}
+        <div class="preview-autores" style="margin-bottom:12px;">
+          <strong>${codigo}</strong>&nbsp;·&nbsp;Grupo <strong>${grupo}</strong>
+          &nbsp;·&nbsp;Autores: ${autores}
+          &nbsp;·&nbsp;<span style="color:#999;">Enviado: ${formatFecha(ficha.timestamp)}</span>
         </div>
       `;
+      if (ficha.html) {
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'width:100%;height:600px;border:1px solid #e0e0e0;border-radius:6px;display:block;margin-top:8px;';
+        iframe.sandbox = 'allow-same-origin';
+        iframe.srcdoc  = ficha.html;
+        body.appendChild(iframe);
+      } else {
+        // Compatibilidad con fichas antiguas en JSON
+        const nombre  = escHtml(ficha.nombre   || pais);
+        const bandera = ficha.banderaEmoji     || '🌍';
+        const capital = escHtml(ficha.capital  || '—');
+        const moneda  = escHtml(ficha.moneda   || '—');
+        const colP = ficha.coloresBandera?.primario   || '#0D3B2B';
+        const colS = ficha.coloresBandera?.secundario || '#1B5E20';
+        const cients = Array.isArray(ficha.cientificos) ? ficha.cientificos : [];
+        const sitios = Array.isArray(ficha.sitiosTuristicos) ? ficha.sitiosTuristicos : [];
+        body.innerHTML += `
+          <div class="preview-header" style="background:linear-gradient(135deg,${colP},${colS});">
+            <span class="preview-bandera">${bandera}</span>
+            <div>
+              <div class="preview-titulo">${nombre}</div>
+              <div class="preview-subtitulo">Capital: ${capital}&nbsp;·&nbsp;Moneda: ${moneda}</div>
+            </div>
+          </div>
+          <div class="preview-section">
+            <h4>🔬 Científicos</h4>
+            ${cients.map(c => `<div class="preview-item"><strong>${escHtml(c.nombre||'?')}</strong><br>${escHtml(c.aporte||'')}</div>`).join('') || '<p style="color:#aaa">Sin datos.</p>'}
+          </div>
+          <div class="preview-section">
+            <h4>🏖️ Sitios Turísticos</h4>
+            ${sitios.map(s => `<div class="preview-item"><strong>${escHtml(s.nombre||'?')}</strong><br>${escHtml(s.descripcion||'')}</div>`).join('') || '<p style="color:#aaa">Sin datos.</p>'}
+          </div>
+        `;
+      }
     }
 
     document.getElementById('fichaModal')?.classList.remove('hidden');
