@@ -268,7 +268,13 @@
       }
 
       try {
-        fichaParseada = JSON.parse(raw);
+        // Eliminar bloques markdown (```json ... ```) que Claude suele generar
+        const jsonLimpio = raw
+          .replace(/^```(?:json)?\s*/im, '')
+          .replace(/\s*```\s*$/m, '')
+          .trim();
+
+        fichaParseada = JSON.parse(jsonLimpio);
         const errores = [];
 
         if (!fichaParseada.codigo || !fichaParseada.nombre)
