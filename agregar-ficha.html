@@ -333,17 +333,24 @@
       const meta = obtenerMeta();
       const errs = validar(meta);
       if (errs.length) { mostrarStatus('error', '❌ ' + errs.join('<br>')); return; }
-      if (!usuarioUID) { mostrarStatus('error', '❌ Error de autenticación. Recarga la página.'); return; }
 
       mostrarStatus('info', '⏳ Enviando ficha…');
 
       try {
-        await set(ref(db, `fichas/${meta.codigo}/${usuarioUID}`), {
+        // Garantizar autenticación aunque no haya terminado aún
+        let uid = usuarioUID;
+        if (!uid) {
+          const cred = await signInAnonymously(auth);
+          uid = cred.user.uid;
+          usuarioUID = uid;
+        }
+
+        await set(ref(db, `fichas/${meta.codigo}/${uid}`), {
           html:      meta.html,
           codigo:    meta.codigo,
           autores:   { nombres: meta.autores, grupo: meta.grupo },
           timestamp: Date.now(),
-          uid:       usuarioUID,
+          uid:       uid,
           estado:    'pendiente'
         });
 
