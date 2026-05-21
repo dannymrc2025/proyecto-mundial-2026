@@ -203,6 +203,37 @@
     <!-- ══ FORMULARIO ═══════════════════════════════════════════════ -->
     <form id="fichaForm" novalidate>
 
+      <!-- ── Sección 0: Datos del equipo ───────────────────────── -->
+      <section class="seccion">
+        <h2>👥 Datos del Equipo</h2>
+
+        <label for="grupo">
+          Grupo *
+          <select id="grupo" name="grupo" required onchange="actualizarPreview()">
+            <option value="">-- Selecciona tu grupo --</option>
+            <option value="2A">2A</option>
+            <option value="2C">2C</option>
+            <option value="2D">2D</option>
+            <option value="2F">2F</option>
+          </select>
+        </label>
+
+        <label for="alumno1">
+          Nombre alumno 1 *
+          <input type="text" id="alumno1" name="alumno1" placeholder="Ej: Ana García" required oninput="actualizarPreview()" />
+        </label>
+
+        <label for="alumno2">
+          Nombre alumno 2 (opcional)
+          <input type="text" id="alumno2" name="alumno2" placeholder="Ej: Luis Pérez" oninput="actualizarPreview()" />
+        </label>
+
+        <label for="alumno3">
+          Nombre alumno 3 (opcional)
+          <input type="text" id="alumno3" name="alumno3" placeholder="Ej: Sofía Ramírez" oninput="actualizarPreview()" />
+        </label>
+      </section>
+
       <!-- ── Sección 1: País ────────────────────────────────────── -->
       <section class="seccion">
         <h2>🌍 Selecciona tu País</h2>
@@ -588,16 +619,7 @@
       if (typeof init === 'function') init();
     });
   </script>
-  <script type="module">
-    /* Guarda de ruta: redirige al profesor si intenta cargar fichas */
-    import { esProfesor } from './js/config-firebase.js';
-    window.addEventListener('load', async () => {
-      if (await esProfesor()) {
-        alert('Solo alumnos pueden cargar fichas.');
-        window.location.href = 'index.html';
-      }
-    });
-  </script>
+
 
 </body>
 </html>

@@ -4,9 +4,8 @@
  * Depende de: config-firebase.js (auth, db, signInAnonymously)
  */
 
-import { auth, db, signInAnonymously, crearUsuario } from './config-firebase.js';
+import { db } from './config-firebase.js';
 import { ref, set } from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js';
-
 // ─── Estado global ──────────────────────────────────────────────────────────
 let fichaData       = {};
 let cientificosCount = 0;
@@ -221,6 +220,12 @@ function validarFicha() {
   const errores      = [];
   const advertencias = [];
 
+  // Grupo y nombres
+  const grupo   = document.getElementById('grupo')?.value   || '';
+  const alumno1 = document.getElementById('alumno1')?.value.trim() || '';
+  if (!grupo)   errores.push('Debes seleccionar tu grupo.');
+  if (!alumno1) errores.push('Debes escribir al menos el nombre del alumno 1.');
+
   // País
   const pais = document.getElementById('pais')?.value || '';
   if (!pais) errores.push('Debes seleccionar un país.');
@@ -275,7 +280,13 @@ function validarFicha() {
 // ─── CONSTRUIR OBJETO fichaData ─────────────────────────────────────────────
 
 function construirFichaData(estado = 'borrador') {
-  const pais = document.getElementById('pais')?.value || '';
+  const pais   = document.getElementById('pais')?.value   || '';
+  const grupo  = document.getElementById('grupo')?.value  || '';
+  const nombres = [
+    document.getElementById('alumno1')?.value.trim() || '',
+    document.getElementById('alumno2')?.value.trim() || '',
+    document.getElementById('alumno3')?.value.trim() || '',
+  ].filter(n => n !== '');
 
   const cientificos = [];
   document.querySelectorAll('.cientifico-item').forEach(item => {
@@ -300,6 +311,8 @@ function construirFichaData(estado = 'borrador') {
 
   return {
     pais,
+    grupo,
+    nombres,
     cientificos,
     destinos,
     timestamp: Date.now(),
@@ -424,14 +437,9 @@ async function enviarFicha() {
   fichaData = construirFichaData('pendiente');
 
   try {
-    // 3. Autenticación anónima + registrar alumno si es primera vez
-    await signInAnonymously();
-    const uid = auth.currentUser?.uid;
-    if (!uid) throw new Error('No se pudo obtener el UID del usuario.');
-    await crearUsuario('alumno');
-
-    // 4. Guardar en Firebase Realtime Database: fichas/{pais}/{uid}
-    const fichaRef = ref(db, `fichas/${fichaData.pais}/${uid}`);
+    // 3. Guardar en Firebase: fichas/{pais}/{grupo}-{timestamp}
+    const key = `${fichaData.grupo}-${fichaData.timestamp}`;
+    const fichaRef = ref(db, `fichas/${fichaData.pais}/${key}`);
     await set(fichaRef, fichaData);
 
     console.log('[ficha.js] Ficha enviada a Firebase:', fichaRef.toString());

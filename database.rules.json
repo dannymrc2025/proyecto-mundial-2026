@@ -6,9 +6,7 @@
     },
     "fichas": {
       ".read": true,
-      "$pais": {
-        ".write": "root.child('usuarios').child(auth.uid).child('rol').val() === 'alumno'"
-      }
+      ".write": true
     },
     "validacion": {
       ".read": "root.child('usuarios').child(auth.uid).child('rol').val() === 'profesor'",
