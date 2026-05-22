@@ -1649,15 +1649,9 @@
         function updateSidebarIndicators() {
             document.querySelectorAll('.ficha-dot[data-dot]').forEach(dot => {
                 const codigo = dot.dataset.dot;
-                const estado = fichaEstados[codigo];
-                dot.style.background = estado === 'aprobado'  ? '#D4AF37'
-                                     : estado === 'pendiente' ? '#FF9800'
-                                     : estado === 'rechazado' ? '#E53935'
-                                     : 'rgba(255,255,255,0.15)';
-                dot.title = estado === 'aprobado'  ? '✓ Ficha aprobada'
-                           : estado === 'pendiente' ? '⏳ Ficha pendiente'
-                           : estado === 'rechazado' ? '✗ Ficha rechazada'
-                           : 'Sin ficha';
+                const tieneFicha = !!fichaEstados[codigo];
+                dot.textContent = tieneFicha ? '🟢' : '🔴';
+                dot.title = tieneFicha ? 'Con ficha' : 'Sin ficha';
             });
         }
 
