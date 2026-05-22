@@ -18,7 +18,7 @@
 
     /* ─── Header ───────────────────────────────────────────────────── */
     .header {
-      background: linear-gradient(160deg, #0D3B2B, #1B5E20);
+      background: linear-gradient(90deg, #2A398D 0%, #3CAC3B 100%);
       color: white;
       padding: 30px;
       margin-bottom: 20px;
@@ -83,7 +83,7 @@
       margin-bottom: -2px;
     }
     .tab-btn:hover { color: #333; }
-    .tab-btn.active { color: #0D3B2B; border-bottom-color: #0D3B2B; }
+    .tab-btn.active { color: #2A398D; border-bottom-color: #2A398D; }
 
     /* ─── Contenido de tabs ────────────────────────────────────────── */
     .tab-content {
@@ -127,7 +127,7 @@
     }
     .row-bandera { font-size: 30px; line-height: 1; flex-shrink: 0; }
     .row-datos { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-    .row-pais  { font-size: 17px; font-weight: 700; color: #0D3B2B; }
+    .row-pais  { font-size: 17px; font-weight: 700; color: #2A398D; }
     .row-meta  { font-size: 12px; color: #666; }
     .row-fecha { font-size: 12px; color: #aaa; white-space: nowrap; flex-shrink: 0; }
     .row-actions { display: flex; gap: 8px; flex-shrink: 0; }
@@ -147,24 +147,24 @@
     .preview-subtitulo{ font-size: 13px; opacity: 0.9; margin-top: 4px; }
     .preview-section  { margin-bottom: 16px; }
     .preview-section h4 {
-      font-size: 13px; font-weight: 700; color: #0D3B2B;
+      font-size: 13px; font-weight: 700; color: #2A398D;
       text-transform: uppercase; letter-spacing: 0.5px;
       margin-bottom: 8px; padding-bottom: 5px;
       border-bottom: 1px solid #e0e0e0;
     }
     .preview-item {
       background: #f9f9f9;
-      border-left: 3px solid #1B5E20;
+      border-left: 3px solid #3CAC3B;
       padding: 8px 12px;
       border-radius: 0 4px 4px 0;
       margin-bottom: 6px;
       font-size: 13px;
       line-height: 1.7;
     }
-    .preview-item strong { color: #0D3B2B; }
+    .preview-item strong { color: #2A398D; }
     .preview-item a { color: #1976D2; word-break: break-all; }
     .preview-autores {
-      background: #E8F5E9;
+      background: #e3f4fd;
       border-radius: 6px;
       padding: 10px 14px;
       font-size: 13px;
@@ -184,7 +184,7 @@
     button:hover { opacity: 0.88; }
 
     .btn-ver      { background: #1976D2; color: white; }
-    .btn-aprobar  { background: #4CAF50; color: white; }
+    .btn-aprobar  { background: #3CAC3B; color: white; }
     .btn-rechazar { background: #F44336; color: white; }
     .btn-eliminar { background: #757575; color: white; }
 
@@ -230,7 +230,7 @@
     /* ─── Contenido del modal de ficha ─────────────────────────────── */
     #modalTitle {
       font-size: 20px;
-      color: #0D3B2B;
+      color: #2A398D;
       margin-bottom: 20px;
       padding-right: 30px;
     }
@@ -240,7 +240,7 @@
     .modal-section h3 {
       font-size: 14px;
       font-weight: 700;
-      color: #0D3B2B;
+      color: #2A398D;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 10px;
@@ -250,14 +250,14 @@
 
     .modal-item {
       background: #f9f9f9;
-      border-left: 3px solid #0D3B2B;
+      border-left: 3px solid #2A398D;
       padding: 10px 12px;
       border-radius: 0 4px 4px 0;
       margin-bottom: 8px;
       font-size: 13px;
       line-height: 1.7;
     }
-    .modal-item strong { color: #0D3B2B; }
+    .modal-item strong { color: #2A398D; }
     .modal-item a { color: #1976D2; word-break: break-all; }
 
     /* ─── Validaciones en modal ─────────────────────────────────────── */
@@ -470,7 +470,7 @@
     function mostrarToastProfesor(msg, tipo = 'exito') {
       const toast = document.getElementById('profesor-toast');
       toast.textContent = msg;
-      toast.style.background = tipo === 'exito' ? '#1B5E20' : '#c62828';
+      toast.style.background = tipo === 'exito' ? '#3CAC3B' : '#E61D25';
       toast.style.color       = 'white';
       toast.style.opacity     = '1';
       clearTimeout(toast._t);

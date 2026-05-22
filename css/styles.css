@@ -1,18 +1,37 @@
 /* Estilos principales - Mundial 2026
- * Paleta Selva Maya:
- *   --bosque-oscuro : #0D3B2B
- *   --verde-profundo: #1B5E20
- *   --verde-claro   : #4CAF50
- *   --tierra        : #6D4C41
- *   --tierra-clara  : #D4A574
+ * Paleta Oficial "We Are 26":
+ *   --rojo-fifa     : #E61D25
+ *   --azul-fifa     : #2A398D
+ *   --verde-fifa    : #3CAC3B
+ *   --turquesa-fifa : #00BCD4
+ *   --lima-fifa     : #CDDC39
+ *   --purpura-fifa  : #A64D99
+ *   --gris-claro    : #D1D4D1
+ *   --gris-oscuro   : #474A4A
  */
 
 :root {
-  --bosque-oscuro:  #0D3B2B;
-  --verde-profundo: #1B5E20;
-  --verde-claro:    #4CAF50;
-  --tierra:         #6D4C41;
-  --tierra-clara:   #D4A574;
+  /* Paleta Oficial Mondial 2026 — "We Are 26" */
+  --rojo-fifa:     #E61D25;  /* Energía, botones primarios */
+  --azul-fifa:     #2A398D;  /* Headers, paneles principales */
+  --verde-fifa:    #3CAC3B;  /* Success, aprobado */
+  --turquesa-fifa: #00BCD4;  /* Info, secundario */
+  --lima-fifa:     #CDDC39;  /* Pendiente, advertencia */
+  --purpura-fifa:  #A64D99;  /* Acentos especiales */
+  --gris-claro:    #D1D4D1;  /* Fondos claros */
+  --gris-oscuro:   #474A4A;  /* Texto oscuro */
+  --negro:         #000000;
+  --blanco:        #FFFFFF;
+
+  /* Estados */
+  --color-success: #3CAC3B;
+  --color-pending: #CDDC39;
+  --color-error:   #E61D25;
+  --color-info:    #00BCD4;
+
+  /* Gradientes */
+  --gradient-header: linear-gradient(90deg, #2A398D 0%, #3CAC3B 100%);
+  --gradient-accent: linear-gradient(135deg, #2A398D 0%, #3CAC3B 50%, #00BCD4 100%);
 }
 
 /* Mobile-first base styles */
