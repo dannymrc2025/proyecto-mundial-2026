@@ -1093,7 +1093,7 @@
         #splash {
             position: fixed;
             inset: 0;
-            background: #000 url('images/copa.png') center/cover no-repeat;
+            background: #000 url('images/splash.png') center/cover no-repeat;
             z-index: 99999;
             display: flex;
             flex-direction: column;
@@ -1102,7 +1102,15 @@
             padding-bottom: 64px;
             transition: opacity 0.8s ease;
         }
-        /* Texto splash oculto (la imagen ya lo incluye) */
+        /* Overlay oscuro para que el texto sea legible */
+        #splash::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.65) 100%);
+            z-index: 0;
+        }
+        /* Texto splash */
         .splash-fallback {
             display: flex;
             flex-direction: column;
@@ -1112,6 +1120,7 @@
             inset: 0;
             padding-bottom: 80px;
             pointer-events: none;
+            z-index: 1;
         }
         .splash-fallback h1 {
             font-family: 'Oswald', serif;
@@ -1138,7 +1147,7 @@
         }
         .splash-bar-wrap {
             position: relative;
-            z-index: 1;
+            z-index: 2;
             width: min(520px, 80vw);
             text-align: center;
         }
