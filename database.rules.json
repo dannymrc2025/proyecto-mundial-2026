@@ -9,8 +9,8 @@
       ".write": true
     },
     "validacion": {
-      ".read": "root.child('usuarios').child(auth.uid).child('rol').val() === 'profesor'",
-      ".write": "root.child('usuarios').child(auth.uid).child('rol').val() === 'profesor'"
+      ".read": true,
+      ".write": true
     },
     "usuarios": {
       ".read": "auth != null",
