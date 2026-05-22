@@ -55,14 +55,15 @@ function escHtml(str) {
 /** Genera el HTML del contenido de una ficha aprobada */
 function renderFichaContent(ficha) {
   // Si la ficha tiene HTML (formato de los alumnos), mostrarlo en iframe
+  // NOTA: el srcdoc se asigna por propiedad JS en select() para evitar problemas de encoding
   if (ficha.html) {
     return `
     <div class="info-section">
       <h4>📄 Ficha del país</h4>
       <iframe
-        srcdoc="${ficha.html.replace(/"/g, '&quot;')}"
+        id="fichaIframe"
         style="width:100%;height:420px;border:1px solid #e0e0e0;border-radius:6px;margin-top:6px;"
-        sandbox="allow-same-origin"
+        sandbox="allow-same-origin allow-scripts"
         title="Ficha del país"
       ></iframe>
     </div>`;
@@ -498,7 +499,14 @@ async function select(code) {
 
     } else if (ficha.estado === 'aprobado') {
       if (statusEl) { statusEl.className = 'status-badge approved'; statusEl.textContent = '✓ Aprobada'; }
-      if (fichaEl)  fichaEl.innerHTML  = renderFichaContent(ficha);
+      if (fichaEl) {
+        fichaEl.innerHTML = renderFichaContent(ficha);
+        // Asignar srcdoc como propiedad para evitar problemas de encoding HTML
+        if (ficha.html) {
+          const iframe = document.getElementById('fichaIframe');
+          if (iframe) iframe.srcdoc = ficha.html;
+        }
+      }
 
     } else if (ficha.estado === 'pendiente') {
       if (statusEl) { statusEl.className = 'status-badge pending'; statusEl.textContent = '⏳ Pendiente'; }
