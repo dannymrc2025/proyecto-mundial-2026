@@ -1093,25 +1093,21 @@
         #splash {
             position: fixed;
             inset: 0;
-            background: #000 url('images/splash.jpg') center/cover no-repeat;
+            background: radial-gradient(ellipse at 50% 30%, #0d1f3c 0%, #050F1E 70%);
             z-index: 99999;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
-            padding-bottom: 64px;
+            justify-content: center;
+            padding: 0 20px 56px;
             transition: opacity 0.8s ease;
         }
-        /* Fallback sin imagen: texto dorado */
+        /* Texto splash */
         .splash-fallback {
-            position: absolute;
-            inset: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
             pointer-events: none;
-            padding-bottom: 80px;
         }
         .splash-fallback h1 {
             font-family: 'Oswald', serif;
@@ -1135,6 +1131,19 @@
             color: rgba(212,175,55,0.55);
             margin-top: 8px;
             font-style: italic;
+        }
+        /* ── Copa trofeo en splash ── */
+        .splash-copa {
+            width: clamp(140px, 22vw, 230px);
+            margin: 18px auto 26px;
+            display: block;
+            filter: drop-shadow(0 0 28px rgba(212,175,55,0.8))
+                    drop-shadow(0 0 60px rgba(212,175,55,0.35));
+            animation: copaFloat 3.2s ease-in-out infinite;
+        }
+        @keyframes copaFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50%       { transform: translateY(-12px) scale(1.03); }
         }
         .splash-bar-wrap {
             position: relative;
@@ -1275,6 +1284,8 @@
             <p>Vamos a disfrutar del mundial y de la Ciencia</p>
             <p class="splash-author">Prof Daniel Esquivel Yeh</p>
         </div>
+        <!-- Copa trofeo -->
+        <img src="images/copa.jpg" class="splash-copa" alt="FIFA World Cup Trophy 2026">
         <!-- Barra de carga -->
         <div class="splash-bar-wrap">
             <div class="splash-bar-track">
