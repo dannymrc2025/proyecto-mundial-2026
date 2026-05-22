@@ -1039,9 +1039,11 @@
         }
 
         /* ── Fix fondos oscuros en tabs y lista ──────────────────────── */
+        .countries-list { background: transparent !important; }
         .tabs { background: rgba(0,0,0,0.45) !important; }
         .tab-btn { color: rgba(255,255,255,0.5) !important; }
-        .tab-btn.active { color: var(--gold) !important; border-bottom-color: var(--gold) !important; }
+        .tab-btn:hover { background: transparent !important; color: rgba(255,255,255,0.8) !important; }
+        .tab-btn.active { background: transparent !important; color: var(--gold) !important; border-bottom-color: var(--gold) !important; }
         .countries-scroll, .groups-scroll { background: transparent !important; }
         .country-item-name { color: rgba(255,255,255,0.9) !important; }
         .country-item.active .country-item-name { color: var(--gold) !important; }
