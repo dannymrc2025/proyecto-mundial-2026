@@ -1104,7 +1104,14 @@
         }
         /* Texto splash oculto (la imagen ya lo incluye) */
         .splash-fallback {
-            display: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            inset: 0;
+            padding-bottom: 80px;
+            pointer-events: none;
         }
         .splash-fallback h1 {
             font-family: 'Oswald', serif;

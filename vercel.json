@@ -16,6 +16,10 @@
       "dest": "/css/$1"
     },
     {
+      "src": "/images/(.*)",
+      "dest": "/images/$1"
+    },
+    {
       "src": "/(.*)\\.html$",
       "dest": "/$1.html"
     },
