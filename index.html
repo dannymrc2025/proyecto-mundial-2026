@@ -98,7 +98,7 @@
 
         .side-panels {
             display: flex;
-            width: 500px;
+            width: 280px;
             background: white;
             box-shadow: -2px 0 8px rgba(0,0,0,0.1);
         }
@@ -254,42 +254,96 @@
             padding: 0;
         }
 
-        #infoPanel {
-            flex: 1;
+        /* ── Modal flotante de país ── */
+        #fichaModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 9000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        #fichaModal.visible {
+            display: flex;
+        }
+        .ficha-modal-box {
+            background: white;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 860px;
+            max-height: 90vh;
             display: flex;
             flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            overflow: hidden;
         }
-
-        .panel-header {
-            padding: 16px;
-            border-bottom: 1px solid #e0e0e0;
-            background: #fafafa;
-            position: sticky;
-            top: 0;
+        .ficha-modal-header {
+            background: linear-gradient(160deg, #0D3B2B, #1B5E20);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
         }
-
-        .panel-header h2 {
-            font-size: 14px;
-            color: #0D3B2B;
+        .ficha-modal-flag { font-size: 40px; line-height: 1; }
+        .ficha-modal-title { flex: 1; }
+        .ficha-modal-title h3 { font-size: 18px; font-weight: 700; }
+        .ficha-modal-title p  { font-size: 12px; opacity: 0.75; margin-top: 2px; }
+        .ficha-modal-close {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            font-size: 20px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .ficha-modal-close:hover { background: rgba(255,255,255,0.3); }
+        .ficha-modal-status {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .ficha-modal-status.approved { background: #4CAF50; color: white; }
+        .ficha-modal-status.pending  { background: #FFC107; color: #333; }
+        .ficha-modal-status.rejected { background: #F44336; color: white; }
+        .ficha-modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 20px;
+        }
+        .ficha-modal-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .ficha-modal-info-item {
+            background: #f5f5f5;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .ficha-modal-info-item .label {
+            font-size: 10px;
+            color: #888;
+            font-weight: 700;
+            text-transform: uppercase;
             margin-bottom: 4px;
         }
-
-        .panel-header p {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .panel-content {
-            flex: 1;
-            padding: 12px;
-            overflow-y: auto;
-        }
-
-        .placeholder {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-            font-size: 12px;
+        .ficha-modal-info-item .value {
+            font-size: 13px;
+            color: #111;
+            font-weight: 600;
         }
 
         .country-card {
@@ -732,15 +786,31 @@
                 </div>
             </div>
 
-            <div id="infoPanel">
-                <div class="panel-header">
-                    <h2>⚽ País</h2>
-                    <p>Selecciona para ver detalles</p>
+        </div>
+
+        <!-- Modal flotante de ficha -->
+        <div id="fichaModal" onclick="if(event.target===this)cerrarFichaModal()">
+            <div class="ficha-modal-box">
+                <div class="ficha-modal-header">
+                    <div class="ficha-modal-flag" id="modalFlag"></div>
+                    <div class="ficha-modal-title">
+                        <h3 id="modalNombre"></h3>
+                        <p id="modalSubtitle"></p>
+                    </div>
+                    <div id="modalStatus" class="ficha-modal-status"></div>
+                    <button class="ficha-modal-close" onclick="cerrarFichaModal()">✕</button>
                 </div>
-                <div class="panel-content">
-                    <div class="placeholder">👈 Elige un país</div>
+                <div class="ficha-modal-body">
+                    <div class="ficha-modal-info">
+                        <div class="ficha-modal-info-item"><div class="label">Capital</div><div class="value" id="modalCapital"></div></div>
+                        <div class="ficha-modal-info-item"><div class="label">Moneda</div><div class="value" id="modalMoneda"></div></div>
+                        <div class="ficha-modal-info-item"><div class="label">Ubicación</div><div class="value" id="modalUbicacion"></div></div>
+                    </div>
+                    <div id="modalFichaContent"></div>
                 </div>
             </div>
+        </div>
+
         </div>
     </div>
 
@@ -1087,12 +1157,17 @@
             })[0];
         }
 
-        // Seleccionar país
+        // Abrir/cerrar modal flotante
+        window.cerrarFichaModal = function() {
+            document.getElementById('fichaModal').classList.remove('visible');
+        };
+
+        // Seleccionar país → abre modal flotante
         window.select = async function(codigo) {
             currentCountry = codigo;
             const pais = paises[codigo];
 
-            // Actualizar lista lateral
+            // Resaltar en lista lateral
             document.querySelectorAll('.country-item').forEach(el => el.classList.remove('active'));
             document.querySelectorAll(`[data-codigo="${codigo}"]`).forEach(el => {
                 el.classList.add('active');
@@ -1102,79 +1177,60 @@
             // Actualizar colores del mapa
             if (window._updateMapColors) window._updateMapColors();
 
-            // Info panel base (mientras carga)
-            document.querySelector('.panel-content').innerHTML = `
-                <div class="country-card">
-                    <div class="card-header">
-                        <div class="card-flag">${pais.emoji}</div>
-                        <div class="card-title">
-                            <h3>${pais.nombre}</h3>
-                            <p>${pais.codigo}</p>
-                        </div>
-                        <div id="cardStatus" class="status-badge"></div>
-                    </div>
-                    <div class="card-body">
-                        <div class="info-row">
-                            <span class="info-label">Capital</span>
-                            <span class="info-value">${pais.capital}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Moneda</span>
-                            <span class="info-value">${pais.moneda}</span>
-                        </div>
-                        <div class="info-row">
-                            <span class="info-label">Ubicación</span>
-                            <span class="info-value">${pais.ubicacion}</span>
-                        </div>
-                        <div id="fichaContent">
-                            <div class="ficha-message" style="color:#bbb;">⏳ Cargando ficha…</div>
-                        </div>
-                    </div>
-                </div>`;
+            // Rellenar header del modal
+            document.getElementById('modalFlag').textContent     = pais.emoji;
+            document.getElementById('modalNombre').textContent   = pais.nombre;
+            document.getElementById('modalSubtitle').textContent = `${pais.codigo} · Grupo ${pais.grupo || ''}`;
+            document.getElementById('modalCapital').textContent  = pais.capital;
+            document.getElementById('modalMoneda').textContent   = pais.moneda;
+            document.getElementById('modalUbicacion').textContent = pais.ubicacion;
+
+            const statusEl  = document.getElementById('modalStatus');
+            const fichaEl   = document.getElementById('modalFichaContent');
+            statusEl.className   = 'ficha-modal-status';
+            statusEl.textContent = '';
+            fichaEl.innerHTML    = '<div class="ficha-message" style="color:#bbb;">⏳ Cargando ficha…</div>';
+
+            // Mostrar modal
+            document.getElementById('fichaModal').classList.add('visible');
 
             // Consultar Firebase
             try {
                 const snapshot = await get(ref(db, `fichas/${codigo}`));
                 const ficha = getMejorFicha(snapshot.val());
-                if (currentCountry !== codigo) return; // cambió de país mientras cargaba
-
-                const statusEl = document.getElementById('cardStatus');
-                const fichaEl  = document.getElementById('fichaContent');
+                if (currentCountry !== codigo) return;
 
                 if (!ficha) {
                     fichaEl.innerHTML = '<div class="ficha-message">📌 Ficha lista para llenar</div>';
 
                 } else if (ficha.estado === 'aprobado') {
-                    statusEl.className   = 'status-badge approved';
+                    statusEl.classList.add('approved');
                     statusEl.textContent = '✓ Aprobada';
                     if (ficha.html) {
-                        fichaEl.innerHTML = `
-                            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;">
-                                <p style="font-size:11px;font-weight:700;color:#0D3B2B;text-transform:uppercase;margin-bottom:6px;">📄 Ficha del país</p>
-                                <iframe id="fichaIframe"
-                                    style="width:100%;height:420px;border:1px solid #e0e0e0;border-radius:6px;"
-                                    sandbox="allow-same-origin allow-scripts"
-                                    title="Ficha del país"></iframe>
-                            </div>`;
+                        fichaEl.innerHTML = `<iframe id="fichaIframe"
+                            style="width:100%;height:520px;border:1px solid #e0e0e0;border-radius:8px;"
+                            sandbox="allow-same-origin allow-scripts"
+                            title="Ficha del país"></iframe>`;
                         document.getElementById('fichaIframe').srcdoc = limpiarHtml(ficha.html);
                     } else {
                         fichaEl.innerHTML = '<div class="ficha-message">✅ Ficha aprobada.</div>';
                     }
 
                 } else if (ficha.estado === 'pendiente') {
-                    statusEl.className   = 'status-badge pending';
+                    statusEl.classList.add('pending');
                     statusEl.textContent = '⏳ Pendiente';
-                    fichaEl.innerHTML    = '<div class="ficha-message">⏳ Ficha enviada, en revisión por el profesor…</div>';
+                    fichaEl.innerHTML = '<div class="ficha-message">⏳ Ficha enviada, en revisión por el profesor…</div>';
 
                 } else if (ficha.estado === 'rechazado') {
-                    statusEl.className   = 'status-badge rejected';
+                    statusEl.classList.add('rejected');
                     statusEl.textContent = '✗ Rechazada';
                     const motivo = ficha.motivoRechazo
-                        ? `<p style="margin-top:6px;font-size:11px;color:#c62828;">${ficha.motivoRechazo}</p>` : '';
+                        ? `<p style="margin-top:8px;font-size:12px;color:#c62828;">${ficha.motivoRechazo}</p>` : '';
                     fichaEl.innerHTML = `<div class="ficha-message">⚠️ Ficha rechazada.</div>${motivo}`;
                 }
             } catch(err) {
                 console.error('[select] Error al obtener ficha:', err);
+                fichaEl.innerHTML = '<div class="ficha-message" style="color:#bbb;">Error al cargar la ficha.</div>';
             }
         };
 
