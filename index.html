@@ -1038,6 +1038,58 @@
             font-weight: 600;
         }
 
+        /* ── Fix fondos oscuros en tabs y lista ──────────────────────── */
+        .tabs { background: rgba(0,0,0,0.45) !important; }
+        .tab-btn { color: rgba(255,255,255,0.5) !important; }
+        .tab-btn.active { color: var(--gold) !important; border-bottom-color: var(--gold) !important; }
+        .countries-scroll, .groups-scroll { background: transparent !important; }
+        .country-item-name { color: rgba(255,255,255,0.9) !important; }
+        .country-item.active .country-item-name { color: var(--gold) !important; }
+        .country-item-code { display: none; }
+
+        /* ── Estado ficha en el mapa ─────────────────────────────────── */
+        .country.has-aprobado          { fill: #D4AF37 !important; opacity: 0.9 !important; }
+        .country.has-aprobado:hover    { fill: #FFD700 !important; opacity: 1  !important; }
+        .country.has-pendiente         { fill: #FF9800 !important; opacity: 0.85 !important; }
+        .country.has-pendiente:hover   { fill: #FFB300 !important; opacity: 1  !important; }
+        .country.has-rechazado         { fill: #E53935 !important; opacity: 0.8 !important; }
+        .country.has-rechazado:hover   { fill: #FF5252 !important; opacity: 1  !important; }
+
+        /* ── Dot de estado ficha en lista lateral ───────────────────── */
+        .ficha-dot {
+            width: 9px; height: 9px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+            flex-shrink: 0;
+            transition: background 0.4s;
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        /* ── Toast de aviso (sin ficha) ─────────────────────────────── */
+        #toast-aviso {
+            position: fixed;
+            bottom: 32px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: rgba(8, 20, 38, 0.97);
+            color: rgba(255,255,255,0.92);
+            padding: 13px 28px;
+            border-radius: 30px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 10000;
+            border: 1px solid rgba(212,175,55,0.55);
+            box-shadow: 0 10px 36px rgba(0,0,0,0.55);
+            transition: transform 0.35s cubic-bezier(.34,1.56,.64,1), opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #toast-aviso.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
         /* ── Responsive ─────────────────────────────────────────────── */
         @media (max-width: 768px) {
             .top-nav { height: 52px; }
@@ -1082,8 +1134,10 @@
             <div id="map-tooltip"></div>
             <div class="legend">
                 <p><strong>🌍 48 Países</strong></p>
-                <p>🟩 País clasificado</p>
-                <p>🟨 País seleccionado</p>
+                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00A651;vertical-align:middle;margin-right:5px"></span>Sin ficha</p>
+                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#D4AF37;vertical-align:middle;margin-right:5px"></span>Ficha aprobada</p>
+                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF9800;vertical-align:middle;margin-right:5px"></span>Ficha pendiente</p>
+                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E53935;vertical-align:middle;margin-right:5px"></span>Ficha rechazada</p>
                 <p>📍 País pequeño</p>
             </div>
         </div>
@@ -1131,6 +1185,9 @@
         </div>
     </div>
 
+    <!-- Toast aviso sin ficha -->
+    <div id="toast-aviso"></div>
+
     <!-- D3.js + TopoJSON -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
@@ -1158,7 +1215,7 @@
         const db = getDatabase(app);
 
         // Global variables
-        let paises = {}, currentCountry = null;
+        let paises = {}, currentCountry = null, fichaEstados = {};
 
         // Mapeo ISO numérico → código alpha-2
         const isoNumeric = {
@@ -1207,6 +1264,19 @@
                 });
 
                 await init();
+
+                // Escuchar fichas en tiempo real → actualizar mapa y sidebar
+                onValue(ref(db, 'fichas'), snapshot => {
+                    const allFichas = snapshot.val() || {};
+                    fichaEstados = {};
+                    Object.entries(allFichas).forEach(([codigo, fichasPais]) => {
+                        const ficha = getMejorFicha(fichasPais);
+                        if (ficha) fichaEstados[codigo] = ficha.estado;
+                    });
+                    if (window._updateMapColors) window._updateMapColors();
+                    updateSidebarIndicators();
+                });
+
             } catch (error) {
                 console.error('Error cargando paises.json:', error);
             }
@@ -1378,10 +1448,18 @@
                 countryPaths.attr('class', d => {
                     const c = numericToCode[+d.id];
                     if (!c) return 'country other';
-                    return 'country qualified' + (c === currentCountry ? ' selected' : '');
+                    const estado = fichaEstados[c];
+                    const fc = estado === 'aprobado'  ? ' has-aprobado'
+                             : estado === 'pendiente' ? ' has-pendiente'
+                             : estado === 'rechazado' ? ' has-rechazado' : '';
+                    return 'country qualified' + fc + (c === currentCountry ? ' selected' : '');
                 });
                 Object.entries(pinCircles).forEach(([codigo, circle]) => {
-                    circle.attr('fill', codigo === currentCountry ? '#FFC107' : '#2E7D32');
+                    if (codigo === currentCountry) { circle.attr('fill', '#FFD700'); return; }
+                    const estado = fichaEstados[codigo];
+                    circle.attr('fill', estado === 'aprobado'  ? '#D4AF37'
+                                      : estado === 'pendiente' ? '#FF9800'
+                                      : estado === 'rechazado' ? '#E53935' : '#2E7D32');
                 });
             };
 
@@ -1399,7 +1477,7 @@
                 <div class="country-item" data-codigo="${codigo}" onclick="select('${codigo}')">
                     <span class="country-item-emoji">${pais.emoji}</span>
                     <span class="country-item-name">${pais.nombre}</span>
-                    <span class="country-item-code">${codigo}</span>
+                    <span class="ficha-dot" data-dot="${codigo}"></span>
                 </div>
             `).join('');
 
@@ -1417,7 +1495,7 @@
                         <div class="country-item" data-codigo="${codigo}" onclick="select('${codigo}')">
                             <span class="country-item-emoji">${pais.emoji}</span>
                             <span class="country-item-name">${pais.nombre}</span>
-                            <span class="country-item-code">${codigo}</span>
+                            <span class="ficha-dot" data-dot="${codigo}"></span>
                         </div>
                     `;
                 }).join('');
@@ -1436,6 +1514,31 @@
             });
 
             document.getElementById('groupsScroll').innerHTML = html;
+        }
+
+        // Actualizar dots de estado en sidebar
+        function updateSidebarIndicators() {
+            document.querySelectorAll('.ficha-dot[data-dot]').forEach(dot => {
+                const codigo = dot.dataset.dot;
+                const estado = fichaEstados[codigo];
+                dot.style.background = estado === 'aprobado'  ? '#D4AF37'
+                                     : estado === 'pendiente' ? '#FF9800'
+                                     : estado === 'rechazado' ? '#E53935'
+                                     : 'rgba(255,255,255,0.15)';
+                dot.title = estado === 'aprobado'  ? '✓ Ficha aprobada'
+                           : estado === 'pendiente' ? '⏳ Ficha pendiente'
+                           : estado === 'rechazado' ? '✗ Ficha rechazada'
+                           : 'Sin ficha';
+            });
+        }
+
+        // Toast de aviso
+        function mostrarToast(msg) {
+            const t = document.getElementById('toast-aviso');
+            t.textContent = msg;
+            t.classList.add('show');
+            clearTimeout(t._timer);
+            t._timer = setTimeout(() => t.classList.remove('show'), 3200);
         }
 
         // Cambiar tab
@@ -1479,7 +1582,7 @@
             document.getElementById('fichaModal').classList.remove('visible');
         };
 
-        // Seleccionar país → abre modal flotante
+        // Seleccionar país
         window.select = async function(codigo) {
             currentCountry = codigo;
             const pais = paises[codigo];
@@ -1494,33 +1597,35 @@
             // Actualizar colores del mapa
             if (window._updateMapColors) window._updateMapColors();
 
-            // Rellenar header del modal
-            document.getElementById('modalFlag').textContent     = pais.emoji;
-            document.getElementById('modalNombre').textContent   = pais.nombre;
-            document.getElementById('modalSubtitle').textContent = `${pais.codigo} · Grupo ${pais.grupo || ''}`;
-            document.getElementById('modalCapital').textContent  = pais.capital;
-            document.getElementById('modalMoneda').textContent   = pais.moneda;
-            document.getElementById('modalUbicacion').textContent = pais.ubicacion;
-
-            const statusEl  = document.getElementById('modalStatus');
-            const fichaEl   = document.getElementById('modalFichaContent');
-            statusEl.className   = 'ficha-modal-status';
-            statusEl.textContent = '';
-            fichaEl.innerHTML    = '<div class="ficha-message" style="color:#bbb;">⏳ Cargando ficha…</div>';
-
-            // Mostrar modal
-            document.getElementById('fichaModal').classList.add('visible');
-
-            // Consultar Firebase
+            // Consultar Firebase PRIMERO antes de abrir modal
             try {
                 const snapshot = await get(ref(db, `fichas/${codigo}`));
                 const ficha = getMejorFicha(snapshot.val());
                 if (currentCountry !== codigo) return;
 
+                // Sin ficha → mostrar aviso, NO abrir modal
                 if (!ficha) {
-                    fichaEl.innerHTML = '<div class="ficha-message">📌 Ficha lista para llenar</div>';
+                    mostrarToast(`📌 ${pais.emoji} ${pais.nombre} — Aún no tiene ficha`);
+                    return;
+                }
 
-                } else if (ficha.estado === 'aprobado') {
+                // Hay ficha → rellenar y abrir modal
+                document.getElementById('modalFlag').textContent      = pais.emoji;
+                document.getElementById('modalNombre').textContent    = pais.nombre;
+                document.getElementById('modalSubtitle').textContent  = `${pais.codigo} · Grupo ${pais.grupo || ''}`;
+                document.getElementById('modalCapital').textContent   = pais.capital;
+                document.getElementById('modalMoneda').textContent    = pais.moneda;
+                document.getElementById('modalUbicacion').textContent = pais.ubicacion;
+
+                const statusEl = document.getElementById('modalStatus');
+                const fichaEl  = document.getElementById('modalFichaContent');
+                statusEl.className   = 'ficha-modal-status';
+                statusEl.textContent = '';
+                fichaEl.innerHTML    = '';
+
+                document.getElementById('fichaModal').classList.add('visible');
+
+                if (ficha.estado === 'aprobado') {
                     statusEl.classList.add('approved');
                     statusEl.textContent = '✓ Aprobada';
                     if (ficha.html) {
@@ -1545,9 +1650,10 @@
                         ? `<p style="margin-top:8px;font-size:12px;color:#c62828;">${ficha.motivoRechazo}</p>` : '';
                     fichaEl.innerHTML = `<div class="ficha-message">⚠️ Ficha rechazada.</div>${motivo}`;
                 }
+
             } catch(err) {
                 console.error('[select] Error al obtener ficha:', err);
-                fichaEl.innerHTML = '<div class="ficha-message" style="color:#bbb;">Error al cargar la ficha.</div>';
+                mostrarToast('⚠️ Error al cargar la información');
             }
         };
 
