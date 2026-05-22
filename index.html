@@ -1051,22 +1051,17 @@
         .country-item.active .country-item-name { color: var(--gold) !important; }
         .country-item-code { display: none; }
 
-        /* ── Estado ficha en el mapa ─────────────────────────────────── */
-        .country.has-aprobado          { fill: #D4AF37 !important; opacity: 0.9 !important; }
-        .country.has-aprobado:hover    { fill: #FFD700 !important; opacity: 1  !important; }
-        .country.has-pendiente         { fill: #FF9800 !important; opacity: 0.85 !important; }
-        .country.has-pendiente:hover   { fill: #FFB300 !important; opacity: 1  !important; }
-        .country.has-rechazado         { fill: #E53935 !important; opacity: 0.8 !important; }
-        .country.has-rechazado:hover   { fill: #FF5252 !important; opacity: 1  !important; }
+        /* ── Estado ficha en el mapa: Rojo=sin ficha, Verde=con ficha ────── */
+        .country.qualified             { fill: #D32F2F !important; opacity: 0.82 !important; }
+        .country.qualified:hover       { fill: #EF5350 !important; opacity: 1   !important; }
+        .country.has-ficha             { fill: #2E7D32 !important; opacity: 0.88 !important; }
+        .country.has-ficha:hover       { fill: #43A047 !important; opacity: 1   !important; }
 
-        /* ── Dot de estado ficha en lista lateral ───────────────────── */
+        /* ── Emoji indicador de ficha en lista lateral ──────────────── */
         .ficha-dot {
-            width: 9px; height: 9px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.15);
+            font-size: 11px;
             flex-shrink: 0;
-            transition: background 0.4s;
-            border: 1px solid rgba(255,255,255,0.15);
+            line-height: 1;
         }
 
         /* ── Toast de aviso (sin ficha) ─────────────────────────────── */
@@ -1223,10 +1218,8 @@
             <div id="map-tooltip"></div>
             <div class="legend">
                 <p><strong>🌍 48 Países</strong></p>
-                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#00A651;vertical-align:middle;margin-right:5px"></span>Sin ficha</p>
-                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#D4AF37;vertical-align:middle;margin-right:5px"></span>Ficha aprobada</p>
-                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#FF9800;vertical-align:middle;margin-right:5px"></span>Ficha pendiente</p>
-                <p><span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:#E53935;vertical-align:middle;margin-right:5px"></span>Ficha rechazada</p>
+                <p>🟢 Con ficha</p>
+                <p>🔴 Sin ficha</p>
                 <p>📍 País pequeño</p>
             </div>
         </div>
@@ -1589,18 +1582,13 @@
                 countryPaths.attr('class', d => {
                     const c = numericToCode[+d.id];
                     if (!c) return 'country other';
-                    const estado = fichaEstados[c];
-                    const fc = estado === 'aprobado'  ? ' has-aprobado'
-                             : estado === 'pendiente' ? ' has-pendiente'
-                             : estado === 'rechazado' ? ' has-rechazado' : '';
-                    return 'country qualified' + fc + (c === currentCountry ? ' selected' : '');
+                    const tieneFicha = !!fichaEstados[c];
+                    const base = tieneFicha ? 'country qualified has-ficha' : 'country qualified';
+                    return base + (c === currentCountry ? ' selected' : '');
                 });
                 Object.entries(pinCircles).forEach(([codigo, circle]) => {
                     if (codigo === currentCountry) { circle.attr('fill', '#FFD700'); return; }
-                    const estado = fichaEstados[codigo];
-                    circle.attr('fill', estado === 'aprobado'  ? '#D4AF37'
-                                      : estado === 'pendiente' ? '#FF9800'
-                                      : estado === 'rechazado' ? '#E53935' : '#2E7D32');
+                    circle.attr('fill', fichaEstados[codigo] ? '#2E7D32' : '#D32F2F');
                 });
             };
 
