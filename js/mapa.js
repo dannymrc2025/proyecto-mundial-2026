@@ -42,6 +42,20 @@ function getMejorFicha(fichasPais) {
   })[0];
 }
 
+/** Limpia un markdown code fence del HTML de ficha si el alumno lo pegó con backticks */
+function limpiarHtmlFicha(html) {
+  if (!html) return html;
+  // Quitar ```html ... ``` o ``` ... ```
+  return html.replace(/^\s*```[\w]*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+}
+
+/** Asigna srcdoc al iframe de ficha después de que se insertó en el DOM */
+function aplicarSrcdocIframe(ficha) {
+  if (!ficha.html) return;
+  const iframe = document.getElementById('fichaIframe');
+  if (iframe) iframe.srcdoc = limpiarHtmlFicha(ficha.html);
+}
+
 /** Escapa HTML para prevenir XSS al insertar datos de Firebase */
 function escHtml(str) {
   return String(str ?? '')
@@ -55,7 +69,7 @@ function escHtml(str) {
 /** Genera el HTML del contenido de una ficha aprobada */
 function renderFichaContent(ficha) {
   // Si la ficha tiene HTML (formato de los alumnos), mostrarlo en iframe
-  // NOTA: el srcdoc se asigna por propiedad JS en select() para evitar problemas de encoding
+  // NOTA: el srcdoc se asigna por propiedad JS para evitar problemas de encoding
   if (ficha.html) {
     return `
     <div class="info-section">
@@ -501,11 +515,7 @@ async function select(code) {
       if (statusEl) { statusEl.className = 'status-badge approved'; statusEl.textContent = '✓ Aprobada'; }
       if (fichaEl) {
         fichaEl.innerHTML = renderFichaContent(ficha);
-        // Asignar srcdoc como propiedad para evitar problemas de encoding HTML
-        if (ficha.html) {
-          const iframe = document.getElementById('fichaIframe');
-          if (iframe) iframe.srcdoc = ficha.html;
-        }
+        aplicarSrcdocIframe(ficha);
       }
 
     } else if (ficha.estado === 'pendiente') {
@@ -574,6 +584,7 @@ function escucharCambiosFichas() {
         statusEl.className   = 'status-badge approved';
         statusEl.textContent = '✓ Aprobada';
         fichaEl.innerHTML    = renderFichaContent(ficha);
+        aplicarSrcdocIframe(ficha);
       } else if (ficha.estado === 'pendiente') {
         statusEl.className   = 'status-badge pending';
         statusEl.textContent = '⏳ Pendiente';
