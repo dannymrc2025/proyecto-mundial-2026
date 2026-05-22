@@ -153,6 +153,53 @@
       flex-wrap: wrap;
     }
     .footer { text-align: center; color: #999; font-size: 12px; margin-top: 20px; }
+
+    /* ── Sección Prompt Maestro ── */
+    .prompt-section {
+      background: #f0f4ff;
+      border: 2px solid #2A398D;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .prompt-section h2 { color: #2A398D; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .prompt-section p  { color: #474A4A; font-size: 13px; margin-bottom: 14px; }
+    .prompt-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    @media (max-width: 600px) { .prompt-inputs { grid-template-columns: 1fr; } }
+    .prompt-inputs label { font-size: 12px; font-weight: 700; color: #2A398D; display: block; margin-bottom: 4px; }
+    .prompt-inputs input { width: 100%; padding: 8px 10px; border: 2px solid #c5cae9; border-radius: 6px; font-size: 13px; font-family: inherit; transition: border-color 0.2s; }
+    .prompt-inputs input:focus { outline: none; border-color: #2A398D; }
+    .prompt-box {
+      width: 100%;
+      height: 220px;
+      padding: 12px;
+      border: 2px solid #c5cae9;
+      border-radius: 6px;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      background: #fff;
+      resize: vertical;
+      color: #333;
+    }
+    .btn-copy {
+      margin-top: 10px;
+      padding: 10px 22px;
+      background: #2A398D;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-copy:hover  { background: #1a2568; transform: translateY(-1px); }
+    .btn-copy.copied { background: #3CAC3B; }
   </style>
 </head>
 <body>
@@ -175,6 +222,29 @@
         <li>Haz clic en <strong>"👁️ Vista Previa"</strong> para verificar que se ve bien</li>
         <li>Si está correcto, haz clic en <strong>"✅ Enviar para Revisión"</strong></li>
       </ol>
+    </div>
+
+    <!-- Prompt Maestro -->
+    <div class="prompt-section">
+      <h2>📝 Paso 1: Genera tu ficha con Claude</h2>
+      <p>Llena los campos, copia el prompt y pégalo en <a href="https://claude.ai" target="_blank" style="color:#2A398D;font-weight:700;">claude.ai</a>. Claude te generará el código HTML listo.</p>
+      <div class="prompt-inputs">
+        <div>
+          <label for="promptPais">País que investigas *</label>
+          <input type="text" id="promptPais" placeholder="Ej: México, Brasil, Argentina" oninput="actualizarPrompt()">
+        </div>
+        <div>
+          <label for="promptAutores">Nombres de los alumnos *</label>
+          <input type="text" id="promptAutores" placeholder="Ej: Pedro García, Ana Martínez" oninput="actualizarPrompt()">
+        </div>
+        <div>
+          <label for="promptGrupo">Grupo *</label>
+          <input type="text" id="promptGrupo" placeholder="Ej: 2F" oninput="actualizarPrompt()">
+        </div>
+      </div>
+      <textarea id="promptBox" class="prompt-box" readonly></textarea>
+      <br>
+      <button type="button" class="btn-copy" id="btnCopy" onclick="copiarPrompt()">📋 Copiar Prompt</button>
     </div>
 
     <!-- Metadatos del equipo -->
@@ -246,6 +316,114 @@
       <p>🔒 Tu ficha será revisada por el profesor antes de aparecer en el mapa</p>
     </div>
   </div>
+
+  <script>
+    const PROMPT_TEMPLATE = `PROYECTO: Ficha de País Participante en el Mundial de Fútbol 2026
+
+INSTRUCCIONES GENERALES:
+Investiga {PAIS} que participa en el Mundial de Fútbol 2026.
+Alumnos que elaboraron esta ficha: {AUTORES}
+Grupo: {GRUPO}
+
+IMPORTANTE: Proporciona SOLO UN CÓDIGO HTML COMPLETO, listo para copiar y pegar.
+SIN explicaciones, SIN comentarios, SIN \`\`\`html, SIN \`\`\` al final.
+
+ESTRUCTURA OBLIGATORIA DEL HTML (en este orden):
+1. <!DOCTYPE html> al inicio
+2. <html lang="es">
+3. <head> con:
+   - Meta charset="UTF-8"
+   - Meta viewport
+   - Title: "{PAIS} | Mundial 2026"
+   - <style> con TODO el CSS integrado (sin Google Fonts ni archivos externos)
+4. <body> con estas secciones en orden:
+
+   SECCIÓN 1 — ENCABEZADO:
+   - Bandera emoji grande (font-size: 72px), nombre del país en grande
+   - Subtítulo: "Participante en el Mundial de Fútbol 2026"
+   - Continente y región geográfica
+
+   SECCIÓN 2 — DATOS GENERALES (6 tarjetas en grid):
+   - Capital, Idioma oficial, Moneda
+   - Población aproximada, Superficie en km², Código ISO 3 letras
+
+   SECCIÓN 3 — COLORES DE LA BANDERA (3 cajas):
+   - Caja con el color sólido (mínimo 80px de alto)
+   - Nombre oficial del color y código hexadecimal exacto
+
+   SECCIÓN 4 — UBICACIÓN Y GEOGRAFÍA:
+   - Continente, subregión, acceso al mar (océano o sin salida)
+   - Hasta 5 países fronterizos en etiquetas/chips
+
+   SECCIÓN 5 — PERSONAJES FAMOSOS (2 a 5):
+   - Nombre, campo (ciencia, arte, política, deporte) y aporte breve
+
+   SECCIÓN 6 — JUGADORES ESTRELLA (EXACTAMENTE 3):
+   - Nombre completo, posición, club actual, un dato destacado
+
+   SECCIÓN 7 — SITIOS TURÍSTICOS (mínimo 3):
+   - Nombre, descripción de 1-2 oraciones, enlace oficial real
+
+   SECCIÓN 8 — DATOS CURIOSOS:
+   - 3 a 5 datos interesantes sobre cultura, historia o geografía del país
+
+   SECCIÓN 9 — AUTORES:
+   - Nombres de los alumnos y grupo exactos tal como se indicaron arriba
+   - Año: 2026
+
+5. </body>
+6. </html> al final
+
+REQUISITOS DEL DISEÑO CSS:
+- TODO el CSS dentro de <style> (NO archivos externos, NO Google Fonts)
+- Fuente: Segoe UI, Tahoma, Arial, sans-serif
+- Colores hexadecimales EXACTOS de la bandera del país como paleta
+- body: fondo con gradiente 135deg usando los colores de la bandera
+- Encabezado: gradiente oscurecido de los colores de la bandera, texto blanco
+- Secciones: fondo rgba(255,255,255,0.93), border-radius: 12px, padding: 24px
+- Tarjetas/cards: fondo blanco, border-left: 4px solid [color principal bandera]
+- box-shadow: 0 4px 12px rgba(0,0,0,0.10) en tarjetas y secciones
+- Hover en tarjetas: transform: translateY(-4px), transición 0.2s
+- Grid responsivo: grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))
+- Máximo 1200px de ancho, centrado con margin: 0 auto
+- Padding general del body: 24px
+- Gap entre secciones: 24px
+- Border-radius uniforme: 12px en secciones, 8px en tarjetas
+- Sección AUTORES: fondo con gradiente de la bandera, texto blanco, centrado
+
+ENTREGA FINAL:
+✓ TODO el código HTML + CSS en UN SOLO BLOQUE
+✓ Desde <!DOCTYPE html> hasta </html>
+✓ Listo para copiar COMPLETO
+✓ Listo para pegar en archivo .html
+✓ Listo para abrir en navegador
+✓ SIN explicaciones adicionales
+✓ SIN \`\`\`html ni \`\`\`
+✓ SIN comentarios en el código`;
+
+    function actualizarPrompt() {
+      const pais    = document.getElementById('promptPais').value.trim()    || 'Brasil';
+      const autores = document.getElementById('promptAutores').value.trim() || 'Pedro García, Ana Martínez';
+      const grupo   = document.getElementById('promptGrupo').value.trim()   || '2F';
+      document.getElementById('promptBox').value = PROMPT_TEMPLATE
+        .replace(/{PAIS}/g, pais)
+        .replace(/{AUTORES}/g, autores)
+        .replace(/{GRUPO}/g, grupo);
+    }
+
+    function copiarPrompt() {
+      const box = document.getElementById('promptBox');
+      navigator.clipboard.writeText(box.value).then(() => {
+        const btn = document.getElementById('btnCopy');
+        btn.textContent = '✅ ¡Copiado!';
+        btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = '📋 Copiar Prompt'; btn.classList.remove('copied'); }, 2000);
+      });
+    }
+
+    // Inicializar con valores de ejemplo al cargar
+    window.addEventListener('DOMContentLoaded', actualizarPrompt);
+  </script>
 
   <script type="module">
     import { initializeApp }   from 'https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js';
