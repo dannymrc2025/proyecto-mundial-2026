@@ -1094,6 +1094,91 @@
             opacity: 1;
         }
 
+        /* ── Splash Screen ──────────────────────────────────────────── */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: #000 url('images/splash.jpg') center/cover no-repeat;
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 64px;
+            transition: opacity 0.8s ease;
+        }
+        /* Fallback sin imagen: texto dorado */
+        .splash-fallback {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            padding-bottom: 80px;
+        }
+        .splash-fallback h1 {
+            font-family: 'Oswald', serif;
+            font-size: clamp(40px, 6vw, 80px);
+            color: #D4AF37;
+            text-align: center;
+            letter-spacing: 3px;
+            text-shadow: 0 0 40px rgba(212,175,55,0.6);
+            line-height: 1.1;
+            margin-bottom: 14px;
+        }
+        .splash-fallback p {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(16px, 2.4vw, 28px);
+            color: rgba(212,175,55,0.78);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .splash-fallback .splash-author {
+            font-size: clamp(13px, 1.6vw, 20px);
+            color: rgba(212,175,55,0.55);
+            margin-top: 8px;
+            font-style: italic;
+        }
+        .splash-bar-wrap {
+            position: relative;
+            z-index: 1;
+            width: min(520px, 80vw);
+            text-align: center;
+        }
+        .splash-bar-track {
+            height: 5px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        .splash-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #8B6914, #FFD700, #D4AF37, #FFD700, #8B6914);
+            background-size: 300% 100%;
+            border-radius: 10px;
+            animation: splashShimmer 1.4s linear infinite;
+            box-shadow: 0 0 14px rgba(255,215,0,0.65);
+            transition: width 0.05s linear;
+        }
+        @keyframes splashShimmer {
+            0%   { background-position: 200% center; }
+            100% { background-position: -200% center; }
+        }
+        .splash-pct {
+            font-family: 'Oswald', sans-serif;
+            font-size: 13px;
+            letter-spacing: 3px;
+            color: rgba(212,175,55,0.65);
+        }
+        #splash.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
         /* ── Responsive ─────────────────────────────────────────────── */
         @media (max-width: 768px) {
             .top-nav { height: 52px; }
@@ -1189,12 +1274,64 @@
         </div>
     </div>
 
+    <!-- ══ SPLASH SCREEN ══════════════════════════════════════════ -->
+    <div id="splash">
+        <!-- Fallback de texto si no hay imagen -->
+        <div class="splash-fallback" id="splash-text">
+            <h1>World Cup 2026</h1>
+            <p>Vamos a disfrutar del mundial y de la Ciencia</p>
+            <p class="splash-author">Prof Daniel Esquivel Yeh</p>
+        </div>
+        <!-- Barra de carga -->
+        <div class="splash-bar-wrap">
+            <div class="splash-bar-track">
+                <div class="splash-bar-fill" id="splash-bar"></div>
+            </div>
+            <div class="splash-pct" id="splash-pct">0%</div>
+        </div>
+    </div>
+
     <!-- Toast aviso sin ficha -->
     <div id="toast-aviso"></div>
 
     <!-- D3.js + TopoJSON -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/topojson@3/dist/topojson.min.js"></script>
+
+    <!-- Splash Screen animation (runs immediately) -->
+    <script>
+    (function() {
+        var bar   = document.getElementById('splash-bar');
+        var pct   = document.getElementById('splash-pct');
+        var txt   = document.getElementById('splash-text');
+        var splash = document.getElementById('splash');
+        var DURATION = 4800; // ms total
+        var start = null;
+
+        // Si hay imagen cargada, ocultar el texto fallback
+        var img = new Image();
+        img.onload = function() { txt.style.display = 'none'; };
+        img.src = 'images/splash.jpg';
+
+        function tick(ts) {
+            if (!start) start = ts;
+            var elapsed = ts - start;
+            var p = Math.min((elapsed / DURATION) * 100, 100);
+            bar.style.width = p.toFixed(1) + '%';
+            pct.textContent = Math.floor(p) + '%';
+            if (p < 100) {
+                requestAnimationFrame(tick);
+            } else {
+                pct.textContent = '100%';
+                setTimeout(function() {
+                    splash.classList.add('fade-out');
+                    setTimeout(function() { splash.style.display = 'none'; }, 850);
+                }, 350);
+            }
+        }
+        requestAnimationFrame(tick);
+    })();
+    </script>
 
     <!-- Firebase SDK v9+ (modular) -->
     <script type="module">
