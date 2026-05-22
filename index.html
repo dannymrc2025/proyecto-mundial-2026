@@ -373,6 +373,19 @@
             margin-top: 10px;
         }
 
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+            margin-left: auto;
+            align-self: flex-start;
+            white-space: nowrap;
+        }
+        .status-badge.approved { background: #4CAF50; color: white; }
+        .status-badge.pending  { background: #FFC107; color: #333; }
+        .status-badge.rejected { background: #F44336; color: white; }
+
         /* Animaciones para marcadores */
         @keyframes pulse-glow {
             0%, 100% { 
@@ -739,7 +752,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+        import { getDatabase, ref, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
 
         // Firebase Config
         const firebaseConfig = {
@@ -1056,8 +1069,26 @@
             toggle.classList.toggle('collapsed');
         };
 
+        // Limpia markdown code fence del HTML si el alumno lo pegó con backticks
+        function limpiarHtml(html) {
+            if (!html) return html;
+            return html.replace(/^\s*```[\w]*\n?/i, '').replace(/\n?```\s*$/i, '').trim();
+        }
+
+        // Devuelve la ficha más relevante de un objeto { uid: fichaObj }
+        function getMejorFicha(fichasPais) {
+            if (!fichasPais || typeof fichasPais !== 'object') return null;
+            const lista = Object.values(fichasPais).filter(f => f && typeof f === 'object');
+            if (!lista.length) return null;
+            const prio = { aprobado: 0, pendiente: 1, rechazado: 2 };
+            return lista.sort((a, b) => {
+                const pa = prio[a.estado] ?? 3, pb = prio[b.estado] ?? 3;
+                return pa !== pb ? pa - pb : (b.timestamp || 0) - (a.timestamp || 0);
+            })[0];
+        }
+
         // Seleccionar país
-        window.select = function(codigo) {
+        window.select = async function(codigo) {
             currentCountry = codigo;
             const pais = paises[codigo];
 
@@ -1071,8 +1102,8 @@
             // Actualizar colores del mapa
             if (window._updateMapColors) window._updateMapColors();
 
-            // Info panel
-            const html = `
+            // Info panel base (mientras carga)
+            document.querySelector('.panel-content').innerHTML = `
                 <div class="country-card">
                     <div class="card-header">
                         <div class="card-flag">${pais.emoji}</div>
@@ -1080,6 +1111,7 @@
                             <h3>${pais.nombre}</h3>
                             <p>${pais.codigo}</p>
                         </div>
+                        <div id="cardStatus" class="status-badge"></div>
                     </div>
                     <div class="card-body">
                         <div class="info-row">
@@ -1094,14 +1126,56 @@
                             <span class="info-label">Ubicación</span>
                             <span class="info-value">${pais.ubicacion}</span>
                         </div>
-                        <div class="ficha-message">
-                            📌 Ficha lista para llenar
+                        <div id="fichaContent">
+                            <div class="ficha-message" style="color:#bbb;">⏳ Cargando ficha…</div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
 
-            document.querySelector('.panel-content').innerHTML = html;
+            // Consultar Firebase
+            try {
+                const snapshot = await get(ref(db, `fichas/${codigo}`));
+                const ficha = getMejorFicha(snapshot.val());
+                if (currentCountry !== codigo) return; // cambió de país mientras cargaba
+
+                const statusEl = document.getElementById('cardStatus');
+                const fichaEl  = document.getElementById('fichaContent');
+
+                if (!ficha) {
+                    fichaEl.innerHTML = '<div class="ficha-message">📌 Ficha lista para llenar</div>';
+
+                } else if (ficha.estado === 'aprobado') {
+                    statusEl.className   = 'status-badge approved';
+                    statusEl.textContent = '✓ Aprobada';
+                    if (ficha.html) {
+                        fichaEl.innerHTML = `
+                            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;">
+                                <p style="font-size:11px;font-weight:700;color:#0D3B2B;text-transform:uppercase;margin-bottom:6px;">📄 Ficha del país</p>
+                                <iframe id="fichaIframe"
+                                    style="width:100%;height:420px;border:1px solid #e0e0e0;border-radius:6px;"
+                                    sandbox="allow-same-origin allow-scripts"
+                                    title="Ficha del país"></iframe>
+                            </div>`;
+                        document.getElementById('fichaIframe').srcdoc = limpiarHtml(ficha.html);
+                    } else {
+                        fichaEl.innerHTML = '<div class="ficha-message">✅ Ficha aprobada.</div>';
+                    }
+
+                } else if (ficha.estado === 'pendiente') {
+                    statusEl.className   = 'status-badge pending';
+                    statusEl.textContent = '⏳ Pendiente';
+                    fichaEl.innerHTML    = '<div class="ficha-message">⏳ Ficha enviada, en revisión por el profesor…</div>';
+
+                } else if (ficha.estado === 'rechazado') {
+                    statusEl.className   = 'status-badge rejected';
+                    statusEl.textContent = '✗ Rechazada';
+                    const motivo = ficha.motivoRechazo
+                        ? `<p style="margin-top:6px;font-size:11px;color:#c62828;">${ficha.motivoRechazo}</p>` : '';
+                    fichaEl.innerHTML = `<div class="ficha-message">⚠️ Ficha rechazada.</div>${motivo}`;
+                }
+            } catch(err) {
+                console.error('[select] Error al obtener ficha:', err);
+            }
         };
 
         // Cargar datos
