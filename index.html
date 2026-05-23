@@ -1378,6 +1378,12 @@
         var DURATION = 4800; // ms total
         var start = null;
 
+        // Si el splash ya se mostró en esta sesión, saltarlo de inmediato
+        if (sessionStorage.getItem('splashShown')) {
+            splash.style.display = 'none';
+            return;
+        }
+
         // Si hay imagen cargada, ocultar el texto fallback
         var img = new Image();
         img.onload = function() { txt.style.display = 'none'; };
@@ -1394,6 +1400,7 @@
             } else {
                 pct.textContent = '100%';
                 setTimeout(function() {
+                    sessionStorage.setItem('splashShown', '1');
                     splash.classList.add('fade-out');
                     setTimeout(function() { splash.style.display = 'none'; }, 850);
                 }, 350);
