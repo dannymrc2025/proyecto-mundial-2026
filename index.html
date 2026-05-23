@@ -1064,7 +1064,7 @@
             line-height: 1;
         }
 
-        /* ── Toast de aviso (sin ficha) ─────────────────────────────── */
+        /* ── Toast de aviso (errores) ───────────────────────────────── */
         #toast-aviso {
             position: fixed;
             bottom: 32px;
@@ -1088,6 +1088,63 @@
             transform: translateX(-50%) translateY(0);
             opacity: 1;
         }
+
+        /* ── Modal sin ficha (centrado, responsive) ─────────────────── */
+        #sin-ficha-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10001;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.65);
+            backdrop-filter: blur(4px);
+        }
+        #sin-ficha-modal.show { display: flex; }
+        .sfm-card {
+            background: #fff;
+            border-radius: 18px;
+            padding: 28px 22px 20px;
+            max-width: 320px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.45);
+            animation: sfmIn 0.28s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes sfmIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to   { transform: scale(1);   opacity: 1; }
+        }
+        .sfm-emoji  { font-size: 54px; line-height: 1; margin-bottom: 10px; }
+        .sfm-nombre { font-size: 20px; font-weight: 700; color: #2A398D; margin-bottom: 4px; }
+        .sfm-msg    { color: #777; font-size: 13px; margin-bottom: 20px; }
+        .sfm-btn-add {
+            display: block;
+            background: linear-gradient(90deg, #2A398D 0%, #3CAC3B 100%);
+            color: #fff;
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-bottom: 10px;
+            font-size: 14px;
+            transition: opacity 0.2s;
+        }
+        .sfm-btn-add:hover { opacity: 0.88; }
+        .sfm-btn-close {
+            width: 100%;
+            padding: 10px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            color: #555;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .sfm-btn-close:hover { background: #ddd; }
 
         /* ── Splash Screen ──────────────────────────────────────────── */
         #splash {
@@ -1293,8 +1350,19 @@
         </div>
     </div>
 
-    <!-- Toast aviso sin ficha -->
+    <!-- Toast aviso errores -->
     <div id="toast-aviso"></div>
+
+    <!-- Modal sin ficha -->
+    <div id="sin-ficha-modal" onclick="if(event.target===this) cerrarModalSinFicha()">
+      <div class="sfm-card">
+        <div class="sfm-emoji" id="sfm-emoji"></div>
+        <div class="sfm-nombre" id="sfm-nombre"></div>
+        <div class="sfm-msg">Aún no tiene ficha disponible</div>
+        <a class="sfm-btn-add" href="./agregar-ficha.html">📄 Subir la ficha de este país</a>
+        <button class="sfm-btn-close" onclick="cerrarModalSinFicha()">Cerrar</button>
+      </div>
+    </div>
 
     <!-- D3.js + TopoJSON -->
     <script src="https://d3js.org/d3.v7.min.js"></script>
@@ -1664,7 +1732,12 @@
             });
         }
 
-        // Toast de aviso
+        // Modal sin ficha
+        window.cerrarModalSinFicha = function() {
+            document.getElementById('sin-ficha-modal').classList.remove('show');
+        };
+
+        // Toast de aviso (solo errores)
         function mostrarToast(msg) {
             const t = document.getElementById('toast-aviso');
             t.textContent = msg;
@@ -1735,9 +1808,11 @@
                 const ficha = getMejorFicha(snapshot.val());
                 if (currentCountry !== codigo) return;
 
-                // Sin ficha → mostrar aviso, NO abrir modal
+                // Sin ficha → mostrar modal centrado
                 if (!ficha) {
-                    mostrarToast(`📌 ${pais.emoji} ${pais.nombre} — Aún no tiene ficha`);
+                    document.getElementById('sfm-emoji').textContent  = pais.emoji;
+                    document.getElementById('sfm-nombre').textContent = pais.nombre;
+                    document.getElementById('sin-ficha-modal').classList.add('show');
                     return;
                 }
 
